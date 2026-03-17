@@ -1,0 +1,4 @@
+project_id = "ctrrnllstbvildrcvkta"
+
+[functions.amarta-chat]
+verify_jwt = false
