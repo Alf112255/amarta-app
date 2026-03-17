@@ -12,9 +12,14 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/amarta-chat`
 
 const ChatPage = () => {
   const { t, language } = useLanguage();
+  
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: t("chat.welcome") },
+    { 
+      role: "assistant", 
+      content: "Halo, aku AMARTA. Senang sekali kamu ada di sini hari ini. Kadang hidup membawa kita ke hari-hari yang tak terduga, ya? Mari kita belajar nrimo ing pandum bersama—menerima setiap rasa yang hadir hari ini dengan ikhlas. Ceritakan apa pun yang sedang membebani hatimu, aku di sini menemanimu."
+    },
   ]);
+
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
