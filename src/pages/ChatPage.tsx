@@ -37,7 +37,7 @@ const ChatPage = () => {
     setInput("");
     setIsLoading(true);
 
-   try {
+    try {
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
@@ -53,10 +53,8 @@ const ChatPage = () => {
       if (!resp.ok) throw new Error("Gagal mengambil respon dari server");
 
       const data = await resp.json();
-      console.log("Isi data asli dari server", data);
       
       let aiText = "";
-
       if (Array.isArray(data) && data[0]?.candidates?.[0]?.content?.parts?.[0]?.text) {
         aiText = data[0].candidates[0].content.parts[0].text;
       } else if (data.response) {
@@ -70,14 +68,14 @@ const ChatPage = () => {
       } else if (data.error) {
         throw new Error(String(data.error));
       } else {
-        throw new Error("Data tidak terduga " + JSON.stringify(data));
+        throw new Error("Data tidak terduga");
       }
 
     } catch (err) {
       console.error("Chat error", err);
       setMessages((prev) => [
         ...prev, 
-        { role: "assistant", content: "Maaf, AMARTA sedang mengalami gangguan koneksi. Mohon coba lagi." }
+        { role: "assistant", content: "Maaf, AMARTA sedang mengalami sedikit gangguan. Mari tarik napas sejenak dan coba kirim lagi ya." }
       ]);
     } finally {
       setIsLoading(false);
@@ -89,7 +87,7 @@ const ChatPage = () => {
       <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-10rem)] lg:h-[calc(100vh-6rem)]">
         <h1 className="text-2xl font-bold text-foreground mb-4">{t("chat.title")}</h1>
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-3 pr-1">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-hide">
           {messages.map((msg, i) => (
             <motion.div
               key={i}
@@ -98,14 +96,14 @@ const ChatPage = () => {
               className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[85%] rounded-3xl px-4 py-3 text-sm ${
+                className={`max-w-[85%] rounded-[24px] px-5 py-3 text-sm leading-relaxed break-words whitespace-pre-wrap shadow-sm ${
                   msg.role === "user"
-                    ? "bg-primary text-primary-foreground rounded-br-lg"
-                    : "bento-card rounded-bl-lg bg-card border shadow-sm"
+                    ? "bg-primary text-primary-foreground rounded-tr-none"
+                    : "bg-card text-card-foreground border rounded-tl-none bento-card"
                 }`}
               >
                 {msg.role === "assistant" ? (
-                  <div className="prose prose-sm max-w-none text-foreground">
+                  <div className="prose prose-sm max-w-none text-current dark:prose-invert">
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                   </div>
                 ) : (
@@ -114,29 +112,41 @@ const ChatPage = () => {
               </div>
             </motion.div>
           ))}
-          {isLoading && messages[messages.length - 1]?.role === "user" && (
-            <div className="flex justify-start">
-              <div className="bento-card rounded-bl-lg px-4 py-3 bg-card border">
+          
+          {isLoading && (
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              className="flex justify-start"
+            >
+              <div className="bento-card rounded-[24px] rounded-tl-none px-5 py-3 bg-card border flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <span className="text-xs text-muted-foreground italic">AMARTA sedang merangkai kata...</span>
               </div>
-            </div>
+            </motion.div>
           )}
         </div>
 
-        <div className="mt-4 flex gap-2">
-          <input
+        <div className="mt-4 flex gap-2 items-end bg-background/80 backdrop-blur-md pb-2">
+          <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
             placeholder={t("chat.placeholder")}
-            className="flex-1 bg-muted rounded-3xl px-5 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 border-none"
+            rows={1}
+            className="flex-1 bg-muted rounded-2xl px-5 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 border-none resize-none min-h-[48px] max-h-[120px]"
           />
           <Button
             variant="default"
             size="icon"
             onClick={sendMessage}
             disabled={!input.trim() || isLoading}
-            className="rounded-full w-12 h-12 flex-shrink-0"
+            className="rounded-full w-12 h-12 flex-shrink-0 mb-0.5"
           >
             <Send className="w-5 h-5" />
           </Button>
