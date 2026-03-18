@@ -13,7 +13,6 @@ const VoiceAnalysisPage = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [lastFilePath, setLastFilePath] = useState<string | null>(null);
   
-  // State untuk Hasil Analisis
   const [analysisResult, setAnalysisResult] = useState<{
     mood: string;
     score: number;
@@ -50,7 +49,7 @@ const VoiceAnalysisPage = () => {
       mediaRecorder.current.start();
       setIsRecording(true);
       setRecordingComplete(false);
-      setAnalysisResult(null); // Reset hasil lama
+      setAnalysisResult(null);
     } catch (err) {
       toast({
         variant: "destructive",
@@ -68,46 +67,43 @@ const VoiceAnalysisPage = () => {
     }
   };
 
- const handleAnalysis = async () => {
-  if (audioChunks.current.length === 0) return;
-  setIsUploading(true);
+  const handleAnalysis = async () => {
+    if (audioChunks.current.length === 0) return;
+    setIsUploading(true);
 
-  try {
-    // Step 1: Upload file dulu seperti biasa
-    const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
-    const fileName = `${Date.now()}.webm`;
-    const filePath = `recordings/${fileName}`;
+    try {
+      const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
+      const fileName = `${Date.now()}.webm`;
+      const filePath = `recordings/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('voice-recordings')
-      .upload(filePath, audioBlob);
+      const { error: uploadError } = await supabase.storage
+        .from('voice-recordings')
+        .upload(filePath, audioBlob);
 
-    if (uploadError) throw uploadError;
-    setLastFilePath(filePath);
+      if (uploadError) throw uploadError;
+      setLastFilePath(filePath);
 
-    // Step 2: Panggil AI Edge Function
-    const { data, error: aiError } = await supabase.functions.invoke('analyze-voice-emotion', {
-      body: { filePath: filePath }
-    });
+      const { data, error: aiError } = await supabase.functions.invoke('analyze-voice-emotion', {
+        body: { filePath: filePath }
+      });
 
-    if (aiError) throw aiError;
+      if (aiError) throw aiError;
 
-    // Tampilkan hasil asli dari AI
-    setAnalysisResult({
-      mood: data.mood,
-      score: data.score,
-      summary: data.summary
-    });
+      setAnalysisResult({
+        mood: data.mood,
+        score: data.score,
+        summary: data.summary
+      });
 
-    toast({ title: "Analisis Berhasil", description: "AMARTA telah memetakan emosimu." });
+      toast({ title: "Analisis Berhasil", description: "AMARTA telah memetakan emosimu." });
 
-  } catch (error: any) {
-    console.error(error);
-    toast({ variant: "destructive", title: "AI sedang sibuk", description: "Coba lagi dalam beberapa saat." });
-  } finally {
-    setIsUploading(false);
-  }
-};
+    } catch (error: any) {
+      console.error(error);
+      toast({ variant: "destructive", title: "AI sedang sibuk", description: "Coba lagi dalam beberapa saat." });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleTogglePlay = async () => {
     if (isPlaying && audioPlayer.current) {
@@ -159,25 +155,25 @@ const VoiceAnalysisPage = () => {
           </p>
         </div>
 
-        {/* Recording Sphere Area */}
+        {/* Recording Sphere Area with SMOOTH PULSAR */}
         {!analysisResult && (
           <div className="relative w-full flex items-center justify-center py-10 transition-all">
             <AnimatePresence>
               {isRecording && (
                 <>
                   <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1.5, opacity: 0.15 }}
+                    initial={{ scale: 1, opacity: 0 }}
+                    animate={{ scale: 2.2, opacity: 0 }}
                     exit={{ opacity: 0 }}
-                    transition={{ repeat: Infinity, duration: 2, ease: "easeOut" }}
-                    className="absolute w-64 h-64 rounded-full bg-green-500"
+                    transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+                    className="absolute w-64 h-64 rounded-full border-2 border-green-500/30"
                   />
                   <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1.8, opacity: 0.08 }}
+                    initial={{ scale: 1, opacity: 0 }}
+                    animate={{ scale: 1.8, opacity: 0 }}
                     exit={{ opacity: 0 }}
-                    transition={{ repeat: Infinity, duration: 2.5, ease: "easeOut", delay: 0.5 }}
-                    className="absolute w-64 h-64 rounded-full bg-[#cc5833]"
+                    transition={{ repeat: Infinity, duration: 3, delay: 1.5, ease: "linear" }}
+                    className="absolute w-64 h-64 rounded-full border-2 border-[#cc5833]/20"
                   />
                 </>
               )}
@@ -221,7 +217,7 @@ const VoiceAnalysisPage = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="p-6 bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl border border-white/20 dark:border-white/5 rounded-[32px] shadow-sm space-y-4 transition-all"
+              className="p-6 bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl border border-white/20 dark:border-white/5 rounded-[32px] shadow-sm space-y-4"
             >
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-xl">
@@ -238,7 +234,7 @@ const VoiceAnalysisPage = () => {
               <div className="grid grid-cols-2 gap-3 mt-2">
                 <button 
                   onClick={handleTogglePlay}
-                  className="flex items-center justify-center gap-2 py-3 bg-gray-100 dark:bg-gray-700 rounded-2xl font-bold text-xs transition-transform active:scale-95 dark:text-white font-sans"
+                  className="flex items-center justify-center gap-2 py-3 bg-gray-100 dark:bg-gray-700 rounded-2xl font-bold text-xs transition-transform active:scale-95 dark:text-white"
                 >
                   {isPlaying ? <><Pause className="w-4 h-4 fill-current" /> Pause</> : <><Play className="w-4 h-4 fill-current" /> Putar</>}
                 </button>
@@ -248,7 +244,7 @@ const VoiceAnalysisPage = () => {
                     setRecordingComplete(false); 
                     setLastFilePath(null); 
                   }}
-                  className="flex items-center justify-center gap-2 py-3 bg-red-50 dark:bg-red-900/10 text-red-600 rounded-2xl font-bold text-xs transition-transform active:scale-95 font-sans"
+                  className="flex items-center justify-center gap-2 py-3 bg-red-50 dark:bg-red-900/10 text-red-600 rounded-2xl font-bold text-xs transition-transform active:scale-95"
                 >
                   <Trash2 className="w-4 h-4" /> Hapus
                 </button>
@@ -257,7 +253,7 @@ const VoiceAnalysisPage = () => {
               <button 
                 onClick={handleAnalysis}
                 disabled={isUploading}
-                className="w-full py-4 bg-gradient-to-r from-green-600 to-[#cc5833] text-white rounded-2xl font-bold text-sm shadow-lg shadow-green-900/10 transition-transform active:scale-[0.98] disabled:opacity-50 font-sans"
+                className="w-full py-4 bg-gradient-to-r from-green-600 to-[#cc5833] text-white rounded-2xl font-bold text-sm shadow-lg shadow-green-900/10 transition-transform active:scale-[0.98] disabled:opacity-50"
               >
                 {isUploading ? "Menganalisis..." : "Analisis Sekarang"}
               </button>
@@ -269,50 +265,40 @@ const VoiceAnalysisPage = () => {
               key="analysis-result"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-8 bg-white dark:bg-gray-800 border-2 border-green-100 dark:border-green-900/30 rounded-[40px] shadow-2xl space-y-6 transition-all"
+              className="p-8 bg-white dark:bg-gray-800 border-2 border-green-100 dark:border-green-900/30 rounded-[40px] shadow-2xl space-y-6"
             >
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-green-600 dark:text-green-400 uppercase tracking-widest font-sans">Status Emosional</p>
-                  <h2 className="text-2xl font-bold text-foreground italic font-sans">"{analysisResult.mood}"</h2>
+                  <p className="text-[10px] font-bold text-green-600 dark:text-green-400 uppercase tracking-widest">Hasil Analisis</p>
+                  <h2 className="text-2xl font-bold italic">"{analysisResult.mood}"</h2>
                 </div>
                 <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-2xl">
                   <Activity className="w-6 h-6 text-green-600" />
                 </div>
               </div>
 
-              {/* Stress Meter */}
               <div className="space-y-3">
                 <div className="flex justify-between text-xs font-bold font-sans">
                   <span>Tingkat Stres</span>
-                  <span className={analysisResult.score > 50 ? "text-[#cc5833]" : "text-green-600"}>
-                    {analysisResult.score}%
-                  </span>
+                  <span className={analysisResult.score > 50 ? "text-[#cc5833]" : "text-green-600"}>{analysisResult.score}%</span>
                 </div>
                 <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden p-1">
                   <motion.div 
                     initial={{ width: 0 }}
                     animate={{ width: `${analysisResult.score}%` }}
                     transition={{ duration: 1.2, ease: "circOut" }}
-                    className={`h-full rounded-full bg-gradient-to-r ${
-                      analysisResult.score > 50 
-                      ? "from-orange-400 to-[#cc5833]" 
-                      : "from-green-400 to-green-600"
-                    }`}
+                    className={`h-full rounded-full bg-gradient-to-r ${analysisResult.score > 50 ? "from-orange-400 to-[#cc5833]" : "from-green-400 to-green-600"}`}
                   />
                 </div>
               </div>
 
-              {/* Summary Bento */}
               <div className="p-5 bg-muted/30 dark:bg-white/5 rounded-[28px] border border-border/50">
-                <p className="text-[13px] leading-relaxed text-foreground/80 font-sans">
-                  {analysisResult.summary}
-                </p>
+                <p className="text-[13px] leading-relaxed text-foreground/80 font-sans">{analysisResult.summary}</p>
               </div>
 
               <button 
                 onClick={() => { setAnalysisResult(null); setRecordingComplete(false); }}
-                className="w-full py-4 bg-foreground text-background dark:bg-white dark:text-black rounded-2xl font-bold text-sm transition-transform active:scale-95 font-sans"
+                className="w-full py-4 bg-foreground text-background dark:bg-white dark:text-black rounded-2xl font-bold text-sm transition-transform active:scale-95"
               >
                 Selesai & Rekam Ulang
               </button>
@@ -321,10 +307,10 @@ const VoiceAnalysisPage = () => {
         </AnimatePresence>
 
         {!analysisResult && (
-          <div className="p-5 bg-muted/30 dark:bg-gray-800/20 border border-border/50 rounded-[28px] flex gap-4 font-sans transition-all">
+          <div className="p-5 bg-muted/30 dark:bg-gray-800/20 border border-border/50 rounded-[28px] flex gap-4 font-sans">
             <Info className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              AMARTA menjamin privasi suaramu. Data audio hanya digunakan untuk keperluan analisis emosi sesaat dan tidak akan dibagikan kepada pihak ketiga.
+              AMARTA menjamin privasi suaramu. Data audio hanya digunakan untuk analisis emosi sesaat.
             </p>
           </div>
         )}
