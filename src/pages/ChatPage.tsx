@@ -25,8 +25,11 @@ const ChatPage = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages]);
+    // Memastikan ref ada sebelum melakukan auto-scroll
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    }
+  }, [messages, isLoading]); // Ditambahkan isLoading agar ikut turun saat indikator mengetik muncul
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -145,8 +148,10 @@ const ChatPage = () => {
             variant="default"
             size="icon"
             onClick={sendMessage}
+            // --- INI PERBAIKAN UTAMA UNTUK ANDROID ---
+            onPointerDown={(e) => e.preventDefault()}
             disabled={!input.trim() || isLoading}
-            className="rounded-full w-12 h-12 flex-shrink-0 mb-0.5"
+            className="rounded-full w-12 h-12 flex-shrink-0 mb-0.5 active:scale-95 transition-transform"
           >
             <Send className="w-5 h-5" />
           </Button>

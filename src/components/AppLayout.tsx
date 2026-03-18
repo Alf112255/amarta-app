@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, MessageCircle, Mic, HeartPulse, Menu, X, ShieldCheck, Settings, LogOut, Sun, Moon, Maximize2, Minimize2, User, Send } from "lucide-react";
+import { Home, MessageCircle, Mic, HeartPulse, Menu, X, ShieldCheck, Settings, LogOut, Sun, Moon, Maximize2, Minimize2, User, Send, MoreHorizontal } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -10,6 +10,14 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<"booking" | "chat">("booking");
   const [hasNotif, setHasNotif] = useState(true);
+
+  // State untuk sistem obrolan interaktif
+  const [inputValue, setInputValue] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [messages, setMessages] = useState([
+    { id: 1, sender: "doctor", text: "Halo Alifi, dr. Sarah di sini. Ada yang bisa saya bantu terkait hasil analisis suaramu hari ini?", time: "Baru saja" }
+  ]);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleOpenWidget = (e: any) => {
@@ -25,9 +33,54 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
     return () => window.removeEventListener("open-consultation", handleOpenWidget);
   }, []);
 
+  // Gulir otomatis ke pesan terbaru
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages, isTyping, isOpen]);
+
   const handleManualOpen = () => {
     setIsOpen(true);
     if (activeTab === "chat") setHasNotif(false);
+  };
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputValue.trim()) return;
+
+    const newUserMessage = {
+      id: Date.now(),
+      sender: "user",
+      text: inputValue,
+      time: "Sekarang"
+    };
+
+    setMessages((prev) => [...prev, newUserMessage]);
+    setInputValue("");
+    setIsTyping(true);
+
+    // Jeda buatan untuk mensimulasikan balasan AI
+    setTimeout(() => {
+      const doctorReplies = [
+        "Saya mengerti perasaanmu. Mari kita bahas perlahan, apa yang paling membebani pikiranmu saat ini?",
+        "Terima kasih sudah berbagi, Alifi. Sangat wajar merasa seperti itu. Sudah berapa lama kamu merasakan hal ini?",
+        "AMARTA mendeteksi sedikit ketegangan pada suaramu tadi. Apakah ada kejadian spesifik hari ini yang memicu perasaan tersebut?",
+        "Saya di sini untuk mendengarkan. Tarik napas panjang, dan ceritakan pelan-pelan ya."
+      ];
+      
+      const randomReply = doctorReplies[Math.floor(Math.random() * doctorReplies.length)];
+      
+      const newDoctorMessage = {
+        id: Date.now() + 1,
+        sender: "doctor",
+        text: randomReply,
+        time: "Sekarang"
+      };
+
+      setMessages((prev) => [...prev, newDoctorMessage]);
+      setIsTyping(false);
+    }, 1500);
   };
 
   return (
@@ -37,11 +90,11 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
           {!isOpen && (
             <motion.button
               onClick={handleManualOpen}
-              // --- PERBAIKAN DRAG ---
               drag
-              dragConstraints={dragBoundary} // Menggunakan batas layar penuh
-              dragElastic={0.1}
-              dragTransition={{ bounceStiffness: 300, bounceDamping: 20 }}
+              dragConstraints={dragBoundary}
+              // Menghentikan momentum agar tombol tidak meluncur liar
+              dragMomentum={false} 
+              dragElastic={0}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="relative w-16 h-16 bg-gradient-to-br from-green-600 to-[#cc5833] backdrop-blur-xl border border-white/20 rounded-[24px] shadow-xl flex items-center justify-center text-white cursor-grab active:cursor-grabbing transform-gpu will-change-transform"
@@ -125,28 +178,56 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
                 </div>
               ) : (
                 <div className="flex-1 flex flex-col p-4 sm:p-5 overflow-hidden">
-                   <div className="flex-1 overflow-y-auto space-y-4 pr-1 sm:pr-2 scrollbar-hide pb-4">
-                     {/* --- PERBAIKAN BENTO/CHAT BUBBLE ADAPTIF --- */}
-                     <div className="flex flex-col items-start w-full max-w-[92%] sm:max-w-[85%]">
-                       <div className="bg-white/50 dark:bg-white/10 p-3 sm:p-4 rounded-[18px] sm:rounded-[20px] rounded-bl-none border border-white/20 shadow-sm backdrop-blur-md">
-                         <p className="leading-relaxed italic text-[11px] sm:text-[12px] break-words">
-                           Halo Alifi, dr. Sarah di sini. Ada yang bisa saya bantu terkait hasil analisis suaramu hari ini?
+                   <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-4 pr-1 sm:pr-2 scrollbar-hide pb-4">
+                     {messages.map((msg) => (
+                       <motion.div 
+                         key={msg.id}
+                         initial={{ opacity: 0, y: 10 }}
+                         animate={{ opacity: 1, y: 0 }}
+                         className={`flex flex-col w-full ${msg.sender === "user" ? "items-end" : "items-start"}`}
+                       >
+                         <div className={`max-w-[92%] sm:max-w-[85%] p-3 sm:p-4 rounded-[18px] sm:rounded-[20px] shadow-sm backdrop-blur-md break-words ${
+                           msg.sender === "user" 
+                           ? "bg-gradient-to-br from-green-600 to-[#cc5833] text-white rounded-br-none" 
+                           : "bg-white/50 dark:bg-white/10 border border-white/20 rounded-bl-none text-foreground"
+                         }`}>
+                           <p className="leading-relaxed italic text-[11px] sm:text-[12px]">
+                             {msg.text}
+                           </p>
+                         </div>
+                         <p className={`text-[7px] sm:text-[8px] font-bold uppercase text-muted-foreground mt-1.5 tracking-widest ${msg.sender === "user" ? "mr-2" : "ml-2"}`}>
+                           {msg.time} • {msg.sender === "user" ? "Kamu" : "dr. Sarah"}
                          </p>
-                       </div>
-                       <p className="text-[7px] sm:text-[8px] font-bold uppercase text-muted-foreground mt-1.5 ml-2 tracking-widest">Baru saja • dr. Sarah</p>
-                     </div>
+                       </motion.div>
+                     ))}
+                     
+                     {isTyping && (
+                       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-start w-full">
+                         <div className="bg-white/50 dark:bg-white/10 p-3 sm:p-4 rounded-[18px] sm:rounded-[20px] rounded-bl-none border border-white/20 shadow-sm backdrop-blur-md flex items-center gap-1.5">
+                           <MoreHorizontal className="w-4 h-4 text-muted-foreground animate-pulse" />
+                         </div>
+                         <p className="text-[7px] sm:text-[8px] font-bold uppercase text-muted-foreground mt-1.5 ml-2 tracking-widest">dr. Sarah sedang mengetik...</p>
+                       </motion.div>
+                     )}
                    </div>
                    
-                   <div className="mt-auto flex gap-2 items-center bg-white/30 dark:bg-black/20 p-1.5 sm:p-2 rounded-[20px] sm:rounded-[24px] border border-white/20 shadow-inner backdrop-blur-lg shrink-0">
+                   {/* Formulir dibungkus agar tombol pada Android berfungsi saat menekan enter atau ikon kirim */}
+                   <form onSubmit={handleSendMessage} className="mt-auto flex gap-2 items-center bg-white/30 dark:bg-black/20 p-1.5 sm:p-2 rounded-[20px] sm:rounded-[24px] border border-white/20 shadow-inner backdrop-blur-lg shrink-0">
                      <input 
                        type="text"
+                       value={inputValue}
+                       onChange={(e) => setInputValue(e.target.value)}
                        placeholder="Ketik balasanmu..."
-                       className="flex-1 bg-transparent border-none px-3 sm:px-4 py-2 text-[10px] sm:text-[11px] focus:outline-none placeholder:text-muted-foreground/80 font-sans"
+                       className="flex-1 bg-transparent border-none px-3 sm:px-4 py-2 text-[10px] sm:text-[11px] focus:outline-none placeholder:text-muted-foreground/80 font-sans text-foreground"
                      />
-                     <button className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-600 to-[#cc5833] rounded-full flex items-center justify-center text-white shadow-md active:scale-95 transition-transform shrink-0">
-                       <Send className="w-3 h-3 sm:w-4 sm:h-4" />
+                     <button 
+                       type="submit"
+                       disabled={!inputValue.trim()}
+                       className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-600 to-[#cc5833] rounded-full flex items-center justify-center text-white shadow-md active:scale-95 transition-transform shrink-0 disabled:opacity-50"
+                     >
+                       <Send className="w-3 h-3 sm:w-4 sm:h-4 ml-0.5" />
                      </button>
-                   </div>
+                   </form>
                 </div>
               )}
             </div>
@@ -178,8 +259,6 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
 
-  // --- PERBAIKAN REFERENSI BATAS LAYAR ---
-  // Ref ini diletakkan di root div agar mendeteksi lebar dan tinggi layar secara penuh
   const screenRef = useRef(null);
 
   useEffect(() => {
@@ -207,13 +286,11 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   ];
 
   return (
-    // Memasang screenRef di div paling luar yang mencakup min-h-screen
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300 font-sans flex flex-col relative overflow-hidden" ref={screenRef}>
       <main className="pt-20 pb-36 px-4 sm:px-6 max-w-2xl mx-auto w-full flex-1 z-10 overflow-y-auto transform-gpu">
         {children}
       </main>
 
-      {/* Melempar screenRef ke widget agar tau batas layarnya */}
       <ConsultationWidget dragBoundary={screenRef} />
 
       <div className="fixed bottom-8 left-0 right-0 z-50 px-4 flex justify-center pointer-events-none transform-gpu will-change-transform">
