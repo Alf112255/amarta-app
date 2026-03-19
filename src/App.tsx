@@ -14,6 +14,7 @@ import ChatPage from "@/pages/ChatPage";
 import ResiliencePage from "@/pages/ResiliencePage";
 import AlertsPage from "@/pages/AlertsPage";
 import ConsultationPage from "@/pages/ConsultationPage";
+import BookingPage from "@/pages/BookingPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ const App = () => (
               <Route path="/resilience" element={<ProtectedRoute><ResiliencePage /></ProtectedRoute>} />
               <Route path="/alerts" element={<ProtectedRoute><AlertsPage /></ProtectedRoute>} />
               <Route path="/consultation" element={<ProtectedRoute><ConsultationPage /></ProtectedRoute>} />
+              <Route path="/booking" element={<ProtectedRoute><BookingPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
