@@ -62,15 +62,15 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[9999]">
-      <div className="absolute bottom-36 right-6 pointer-events-auto">
+      <div className="absolute bottom-32 right-6 pointer-events-auto">
         <AnimatePresence>
           {!isOpen && (
             <motion.button
               onClick={() => setIsOpen(true)}
               drag dragConstraints={dragBoundary} dragMomentum={false} 
-              className="relative w-16 h-16 bg-gradient-to-br from-[#076653] to-[#E3EF26] backdrop-blur-xl border border-white/20 rounded-[24px] shadow-xl flex items-center justify-center text-white cursor-grab active:cursor-grabbing"
+              className="relative w-14 h-14 bg-gradient-to-br from-[#076653] to-[#E3EF26] backdrop-blur-xl border border-white/20 rounded-[22px] shadow-xl flex items-center justify-center text-white cursor-grab active:cursor-grabbing"
             >
-              <HeartPulse className="w-8 h-8 animate-pulse" />
+              <HeartPulse className="w-7 h-7 animate-pulse" />
             </motion.button>
           )}
         </AnimatePresence>
@@ -85,20 +85,19 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
               scale: 1, 
               y: 0, 
               width: isExpanded ? "90vw" : "360px", 
-              height: isExpanded ? "80vh" : "540px" // PERUBAHAN TINGGI DI SINI
+              height: isExpanded ? "80vh" : "540px" 
             }}
             exit={{ opacity: 0, scale: 0.9, y: 30 }}
             className="pointer-events-auto absolute bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-2xl border border-white/30 dark:border-white/10 shadow-2xl rounded-[35px] overflow-hidden flex flex-col transform-gpu"
             style={{ 
-              bottom: isExpanded ? "5vh" : "130px", 
+              bottom: isExpanded ? "5vh" : "110px", 
               right: isExpanded ? "2.5vw" : "24px" 
             }}
           >
-            {/* Header */}
             <div className="p-4 sm:p-5 bg-white/20 dark:bg-white/5 border-b border-white/20 flex items-center justify-between shrink-0 relative z-50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-[#076653] flex items-center justify-center shadow-lg"><User className="w-5 h-5 text-white" /></div>
-                <h3 className="text-xs sm:text-sm font-bold italic font-sans">Konsultasi AMARTA</h3>
+                <h3 className="text-xs sm:text-sm font-bold italic font-sans text-foreground">Konsultasi AMARTA</h3>
               </div>
               <div className="flex gap-2">
                 <button onClick={() => setIsExpanded(!isExpanded)} className="w-9 h-9 flex items-center justify-center bg-black/5 dark:bg-white/10 hover:bg-black/10 rounded-full transition-all hidden sm:flex">{isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}</button>
@@ -117,10 +116,10 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
                         {showCancelPrompt && (
                           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-[60] bg-white/95 dark:bg-[#1C1C1E] flex flex-col items-center justify-center text-center p-6">
                             <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mb-4"><AlertCircle className="w-6 h-6 text-red-500" /></div>
-                            <h4 className="text-xs font-bold mb-4">Apakah anda ingin membatalkan sesi konsultasi?</h4>
+                            <h4 className="text-xs font-bold mb-4 text-foreground">Apakah anda ingin membatalkan sesi konsultasi?</h4>
                             <div className="flex gap-2 w-full">
-                              <button onClick={() => setShowCancelPrompt(false)} className="flex-1 py-3 rounded-2xl text-[9px] font-bold bg-black/5">KEMBALI</button>
-                              <button onClick={finalCancel} className="flex-1 py-3 rounded-2xl text-[9px] font-bold bg-red-500 text-white">BATALKAN</button>
+                              <button onClick={() => setShowCancelPrompt(false)} className="flex-1 py-3 rounded-2xl text-[9px] font-bold bg-black/5 text-foreground">KEMBALI</button>
+                              <button onClick={finalCancel} className="flex-1 py-3 rounded-2xl text-[9px] font-bold bg-red-500 text-white shadow-lg shadow-red-500/20">BATALKAN</button>
                             </div>
                           </motion.div>
                         )}
@@ -168,8 +167,8 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
             </div>
 
             <div className="p-2 sm:p-3 flex gap-2 bg-white/20 dark:bg-white/5 border-t border-white/20 shrink-0">
-              <button onClick={() => setActiveTab("booking")} className={`flex-1 py-2.5 rounded-[16px] text-[9px] font-bold transition-all ${activeTab === "booking" ? "bg-[#076653] text-white shadow-md" : "text-foreground hover:bg-black/5"}`}>BOOKING</button>
-              <button onClick={() => setActiveTab("chat")} className={`flex-1 py-2.5 rounded-[16px] text-[9px] font-bold transition-all ${activeTab === "chat" ? "bg-[#076653] text-white shadow-md" : "text-foreground hover:bg-black/5"}`}>LIVE CHAT</button>
+              <button onClick={() => setActiveTab("booking")} className={`flex-1 py-2.5 rounded-[16px] text-[9px] font-bold transition-all ${activeTab === "booking" ? "bg-foreground text-background shadow-md" : "text-foreground hover:bg-black/5"}`}>BOOKING</button>
+              <button onClick={() => setActiveTab("chat")} className={`flex-1 py-2.5 rounded-[16px] text-[9px] font-bold transition-all ${activeTab === "chat" ? "bg-foreground text-background shadow-md" : "text-foreground hover:bg-black/5"}`}>LIVE CHAT</button>
             </div>
           </motion.div>
         )}
@@ -212,22 +211,43 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300 font-sans flex flex-col relative overflow-hidden" ref={screenRef}>
       <main className="absolute inset-0 w-full z-10 overflow-y-auto transform-gpu flex flex-col">{children}</main>
+      
       <ConsultationWidget dragBoundary={screenRef} />
       
-      <div className="fixed bottom-6 left-0 right-0 z-50 px-4 flex justify-center items-center gap-5 sm:gap-8 pointer-events-none transform-gpu will-change-transform">
-        <nav className="relative bg-white/65 dark:bg-[#1c1c1e]/70 backdrop-blur-3xl border border-white/60 dark:border-white/10 rounded-[40px] px-4 sm:px-6 py-3.5 flex items-center gap-3 sm:gap-5 shadow-[0_8px_32px_rgba(0,0,0,0.12)] pointer-events-auto transition-all duration-300">
+      <div className="fixed bottom-5 left-0 right-0 z-50 px-4 flex justify-center items-center gap-3 sm:gap-6 pointer-events-none transform-gpu">
+        <nav className="relative bg-white/70 dark:bg-[#1c1c1e]/80 backdrop-blur-3xl border border-white/40 dark:border-white/10 rounded-[32px] px-3 py-2 flex items-center gap-2 shadow-[0_8px_32px_rgba(0,0,0,0.15)] pointer-events-auto transition-all duration-300">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
-              <button key={item.id} onClick={() => navigate(item.path)} className={`relative flex flex-col items-center justify-center gap-1.5 w-[76px] sm:w-[88px] py-2.5 rounded-[24px] transition-colors duration-300 ${isActive ? "text-white dark:text-black" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}>
-                {isActive && <motion.div layoutId="active-nav-capsule" className="absolute inset-0 rounded-[24px] z-0 bg-gradient-to-r from-[#E3EF26] to-[#076653] dark:from-[#E3EF26] dark:to-[#E2FBCE]" transition={{ type: "spring", stiffness: 300, damping: 25 }} />}
-                <item.icon className="w-6 h-6 z-10" fill="none" strokeWidth={isActive ? 2 : 1.5} />
-                <span className={`text-[10px] sm:text-[11px] font-medium tracking-tight z-10 ${isActive ? 'font-bold' : ''}`}>{item.label}</span>
+              <button
+                key={item.id}
+                onClick={() => navigate(item.path)}
+                className={`relative flex flex-col items-center justify-center gap-1 w-[68px] sm:w-[80px] py-2 rounded-[20px] transition-colors duration-300 ${
+                  isActive ? "text-white dark:text-black" : "text-gray-500 dark:text-gray-400"
+                }`}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="active-nav-capsule"
+                    className="absolute inset-0 rounded-[20px] z-0 bg-gradient-to-r from-[#076653] to-[#E3EF26] dark:from-[#E3EF26] dark:to-[#E2FBCE]"
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                  />
+                )}
+                <item.icon className="w-5 h-5 z-10" fill="none" strokeWidth={isActive ? 2.5 : 2} />
+                <span className={`text-[9px] font-bold tracking-tight z-10 ${isActive ? 'opacity-100' : 'opacity-80'}`}>
+                  {item.label}
+                </span>
               </button>
             );
           })}
         </nav>
-        <button onClick={() => setIsSidebarOpen(true)} className="w-[64px] h-[64px] sm:w-[72px] sm:h-[72px] shrink-0 rounded-full bg-white/65 dark:bg-[#1c1c1e]/70 backdrop-blur-3xl border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.12)] flex items-center justify-center text-gray-700 pointer-events-auto transition-transform active:scale-95"><Menu className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2} /></button>
+
+        <button 
+          onClick={() => setIsSidebarOpen(true)} 
+          className="w-[56px] h-[56px] shrink-0 rounded-full bg-white/70 dark:bg-[#1c1c1e]/80 backdrop-blur-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.15)] flex items-center justify-center text-gray-700 dark:text-gray-300 pointer-events-auto transition-transform active:scale-90"
+        >
+          <Menu className="w-5 h-5" strokeWidth={2.5} />
+        </button>
       </div>
 
       <AnimatePresence>

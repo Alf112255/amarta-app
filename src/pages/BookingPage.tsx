@@ -40,7 +40,7 @@ const BookingPage = () => {
     // Memicu animasi sukses visual
     setIsSuccess(true);
     
-    // --- PROSES PENYIMPANAN DATA ASLI ---
+    // PROSES PENYIMPANAN DATA ASLI
     const bookingData = {
       isBooked: true,
       dayName: UPCOMING_DAYS[selectedDay].dayName,
@@ -57,7 +57,6 @@ const BookingPage = () => {
     
     // Menyiarkan sinyal perubahan ke seluruh komponen aplikasi
     window.dispatchEvent(new Event("booking_status_changed"));
-    // ------------------------------------
 
     // Memberi waktu 2 detik untuk menikmati animasi sukses sebelum pindah halaman
     setTimeout(() => {
@@ -67,7 +66,8 @@ const BookingPage = () => {
 
   return (
     <AppLayout>
-      <div className="flex flex-col min-h-[calc(100vh-6rem)] pt-6 pb-40 relative">
+      {/* pb-56 ditambahkan agar tombol tidak tertutup navbar di mobile */}
+      <div className="flex flex-col min-h-[calc(100vh-6rem)] pt-6 pb-56 relative overflow-x-hidden">
         
         {/* --- HEADER --- */}
         <div className="px-4 mb-6 flex items-center gap-4">
