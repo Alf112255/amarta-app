@@ -15,7 +15,7 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
   const [activeTab, setActiveTab] = useState<"booking" | "chat">("booking");
   const [isConfirming, setIsConfirming] = useState(false);
   const [isSuccessConfirm, setIsSuccessConfirm] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false); // State untuk animasi pembatalan
   const [showCancelPrompt, setShowCancelPrompt] = useState(false);
   
   const [bookingData, setBookingData] = useState<any>(null);
@@ -78,9 +78,28 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
         setIsSuccessConfirm(false);
         localStorage.setItem("sarah_confirmed", "true");
         setIsConfirmed(true);
-        setActiveTab("chat"); 
+        setActiveTab("chat"); // OTOMATIS BERALIH KE LIVE CHAT
       }, 2200);
     }, 1200);
+  };
+
+  const finalCancel = () => {
+    setShowCancelPrompt(false);
+    setIsCancelling(true); // MEMICU ANIMASI PEMBATALAN BERHASIL
+    
+    // Hapus data booking
+    localStorage.removeItem("sarah_booked");
+    localStorage.removeItem("booking_details");
+    localStorage.setItem("sarah_confirmed", "false");
+    
+    setTimeout(() => {
+      setIsCancelling(false);
+      setIsOpen(false); // WIDGET TERTUTUP OTOMATIS
+      setBookingData(null);
+      setIsConfirmed(false);
+      window.dispatchEvent(new Event("booking_status_changed"));
+      setTimeout(() => setActiveTab("booking"), 300);
+    }, 2000);
   };
 
   const handleClearBooking = () => {
@@ -90,17 +109,6 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
     setBookingData(null);
     setIsConfirmed(false);
     window.dispatchEvent(new Event("booking_status_changed"));
-  };
-
-  const finalCancel = () => {
-    setShowCancelPrompt(false);
-    setIsCancelling(true); 
-    setTimeout(() => {
-      setIsCancelling(false);
-      handleClearBooking();
-      setIsOpen(false);
-      setTimeout(() => setActiveTab("booking"), 300);
-    }, 1800);
   };
 
   return (
@@ -133,6 +141,24 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
             className="pointer-events-auto absolute bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-2xl border border-white/30 dark:border-white/10 shadow-2xl rounded-[35px] overflow-hidden flex flex-col transform-gpu"
             style={{ bottom: isExpanded ? "5vh" : "110px", right: isExpanded ? "2.5vw" : "24px" }}
           >
+            {/* OVERLAY ANIMASI PEMBATALAN BERHASIL */}
+            <AnimatePresence>
+              {isCancelling && (
+                <motion.div 
+                  initial={{ opacity: 0 }} 
+                  animate={{ opacity: 1 }} 
+                  exit={{ opacity: 0 }} 
+                  className="absolute inset-0 z-[100] bg-white/95 dark:bg-[#1C1C1E] flex flex-col items-center justify-center text-center p-6"
+                >
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200 }} className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
+                    <X className="w-10 h-10 text-red-500" />
+                  </motion.div>
+                  <h4 className="text-lg font-bold text-foreground italic">Pembatalan Berhasil</h4>
+                  <p className="text-[10px] text-muted-foreground mt-2 uppercase tracking-widest">Menutup jendela otomatis...</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="p-4 sm:p-5 bg-white/40 dark:bg-black/40 border-b border-black/5 dark:border-white/10 flex items-center justify-between shrink-0 z-50">
               <div className="flex items-center gap-3">
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-10 h-10 rounded-2xl bg-[#076653] flex items-center justify-center shadow-lg"><User className="w-5 h-5 text-white" /></motion.div>
@@ -149,21 +175,21 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
             <div className="flex-1 overflow-hidden flex flex-col font-sans relative">
               <AnimatePresence mode="wait">
                 {activeTab === "booking" ? (
-                  <motion.div key="booking-tab" initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} className="p-4 sm:p-6 overflow-y-auto h-full flex flex-col">
+                  <motion.div key="booking-tab" initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.4 }} className="p-4 sm:p-6 overflow-y-auto h-full flex flex-col">
                     <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest px-1">Konfirmasi Jadwal Sesi</p>
                     
                     {bookingData ? (
                       <div className="relative p-4 sm:p-5 bg-white/50 dark:bg-black/30 rounded-[28px] border border-white/40 shadow-sm space-y-4">
                         <AnimatePresence>
                           {showCancelPrompt && (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[60] bg-white/95 dark:bg-[#1C1C1E] flex flex-col items-center justify-center text-center p-6 backdrop-blur-md">
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-[60] bg-white/95 dark:bg-[#1C1C1E] flex flex-col items-center justify-center text-center p-6 backdrop-blur-md rounded-[28px]">
                               <AlertCircle className="w-10 h-10 text-red-500 mb-4" />
                               <h4 className="text-xs font-bold mb-4">Batalkan sesi ini?</h4>
                               <div className="flex gap-2 w-full"><button onClick={() => setShowCancelPrompt(false)} className="flex-1 py-3 rounded-2xl text-[9px] font-bold bg-black/5">KEMBALI</button><button onClick={finalCancel} className="flex-1 py-3 rounded-2xl text-[9px] font-bold bg-red-500 text-white">YA, BATALKAN</button></div>
                             </motion.div>
                           )}
                           {isSuccessConfirm && (
-                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="absolute inset-0 z-[70] bg-white/95 dark:bg-[#1C1C1E] flex flex-col items-center justify-center text-center p-6">
+                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="absolute inset-0 z-[70] bg-white/95 dark:bg-[#1C1C1E] flex flex-col items-center justify-center text-center p-6 rounded-[28px]">
                               <motion.div initial={{ scale: 0 }} animate={{ scale: 1, rotate: [0, 10, 0] }} transition={{ type: "spring", damping: 10 }} className="relative"><CheckCircle2 className="w-16 h-16 text-[#076653] mb-4" /><Sparkles className="absolute -top-2 -right-2 text-[#E3EF26] w-6 h-6 animate-pulse" /></motion.div>
                               <h4 className="text-sm font-bold text-foreground">Konfirmasi Berhasil!</h4>
                               <p className="text-[9px] text-muted-foreground mt-2 uppercase tracking-widest">Mengalihkan ke Live chat...</p>
@@ -177,28 +203,16 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
                         </div>
                         
                         <div className="grid grid-cols-2 gap-2 text-center text-[9px] font-bold">
-                          <div className="p-2 bg-white/40 dark:bg-white/5 rounded-xl border border-white/20"><p className="opacity-50 text-[7px] mb-0.5">TANGGAL</p>{bookingData.dayName}, {bookingData.date} Mar</div>
-                          <div className="p-2 bg-white/40 dark:bg-white/5 rounded-xl border border-white/20"><p className="opacity-50 text-[7px] mb-0.5">WAKTU</p>{bookingData.time} WIB</div>
+                          <div className="p-2 bg-white/40 dark:bg-white/5 rounded-xl border border-white/20"><p className="opacity-50 text-[7px] mb-0.5 uppercase">Tanggal</p>{bookingData.dayName}, {bookingData.date} Mar</div>
+                          <div className="p-2 bg-white/40 dark:bg-white/5 rounded-xl border border-white/20"><p className="opacity-50 text-[7px] mb-0.5 uppercase">Waktu</p>{bookingData.time} WIB</div>
                         </div>
 
-                        <div className="bg-white/40 dark:bg-white/5 p-3 rounded-[20px] border border-white/20 space-y-2">
-                          <div className="flex justify-between items-center"><span className="text-[8px] font-bold opacity-60 uppercase text-foreground">No. Antrian</span><span className="text-xs font-bold text-[#076653]">{bookingData.queueNumber}</span></div>
-                          <p className="text-[10px] italic text-foreground/80 line-clamp-2">"{bookingData.complaint}"</p>
-                        </div>
-
-                        {/* STATUS SELESAI & TOMBOL HAPUS */}
                         {isConfirmed ? (
                           <div className="flex gap-2 pt-1">
                             <div className="flex-1 py-3 bg-green-500/10 border border-green-500/20 text-[#076653] rounded-[14px] text-center flex items-center justify-center gap-2">
-                               <CheckCircle2 className="w-3.5 h-3.5" />
-                               <span className="text-[9px] font-bold uppercase tracking-widest">Sesi Selesai</span>
+                               <CheckCircle2 className="w-3.5 h-3.5" /><span className="text-[9px] font-bold uppercase tracking-widest">Sesi Selesai</span>
                             </div>
-                            <button 
-                              onClick={handleClearBooking} 
-                              className="w-12 flex items-center justify-center bg-red-500/10 text-red-500 border border-red-500/20 rounded-[14px] hover:bg-red-500/20 transition-all"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <button onClick={handleClearBooking} className="w-12 flex items-center justify-center bg-red-500/10 text-red-500 border border-red-500/20 rounded-[14px] hover:bg-red-500/20 transition-all"><Trash2 className="w-4 h-4" /></button>
                           </div>
                         ) : (
                           <div className="flex gap-2 pt-1">
@@ -212,7 +226,7 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
                     )}
                   </motion.div>
                 ) : (
-                  <motion.div key="chat-tab" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }} className="flex-1 flex flex-col h-full overflow-hidden">
+                  <motion.div key="chat-tab" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }} transition={{ duration: 0.4 }} className="flex-1 flex flex-col h-full overflow-hidden">
                     {!isConfirmed ? (
                       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-gray-50/50 dark:bg-black/10">
                         <AlertCircle className="w-10 h-10 text-orange-500 mb-4" />
@@ -234,7 +248,7 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
                           <form onSubmit={handleSendMessage} className="flex items-center gap-2 bg-white/80 dark:bg-white/5 p-1.5 rounded-[22px] border border-white/40 shadow-inner">
                             <button type="button" className="p-2 text-muted-foreground"><Paperclip className="w-4 h-4" /></button>
                             <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Tulis balasan..." className="flex-1 bg-transparent border-none px-1 text-[11px] focus:outline-none" />
-                            <motion.button whileTap={{ scale: 0.8 }} type="submit" disabled={!inputValue.trim()} className="w-8 h-8 bg-[#076653] rounded-full flex items-center justify-center text-white"><Send className="w-3.5 h-3.5" /></motion.button>
+                            <motion.button whileTap={{ scale: 0.8 }} type="submit" disabled={!inputValue.trim()} className="w-8 h-8 bg-[#076653] rounded-full flex items-center justify-center text-white disabled:opacity-50"><Send className="w-3.5 h-3.5" /></motion.button>
                           </form>
                         </div>
                       </>
