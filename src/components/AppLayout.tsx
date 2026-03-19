@@ -1,6 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, MessageCircle, Mic, HeartPulse, Menu, X, ShieldCheck, LogOut, Sun, Moon, Maximize2, Minimize2, User, Send, MoreHorizontal, CheckCircle2, Calendar, AlertCircle, Paperclip } from "lucide-react";
+import { 
+  Home, MessageCircle, Mic, HeartPulse, Menu, X, ShieldCheck, 
+  LogOut, Sun, Moon, Maximize2, Minimize2, User, Send, 
+  MoreHorizontal, CheckCircle2, Calendar, AlertCircle, 
+  Paperclip, Sparkles, Trash2 
+} from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -12,62 +17,53 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
   const [isSuccessConfirm, setIsSuccessConfirm] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelPrompt, setShowCancelPrompt] = useState(false);
+  
   const [bookingData, setBookingData] = useState<any>(null);
+  const [isConfirmed, setIsConfirmed] = useState(localStorage.getItem("sarah_confirmed") === "true");
 
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState([
-    { id: 1, sender: "doctor", text: "Halo Alifi, dr. Sarah di sini. Saya sudah membaca keluhanmu. Bisa ceritakan lebih detail apa yang kamu rasakan saat ini?", time: "Baru saja" }
+    { id: 1, sender: "doctor", text: "Halo Alifi, dr. Sarah di sini. Ada yang bisa saya bantu terkait hasil analisis suaramu?", time: "Baru saja" }
   ]);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const loadBookingData = () => {
-    const saved = localStorage.getItem("booking_details");
-    if (saved) {
-      setBookingData(JSON.parse(saved));
-    } else {
-      setBookingData(null);
-    }
+    const savedDetails = localStorage.getItem("booking_details");
+    setBookingData(savedDetails ? JSON.parse(savedDetails) : null);
+    setIsConfirmed(localStorage.getItem("sarah_confirmed") === "true");
   };
 
   useEffect(() => {
     loadBookingData();
-    window.addEventListener("booking_status_changed", loadBookingData);
-    window.addEventListener("open-consultation", (e: any) => {
+    const handleRemoteControl = (e: any) => {
       setIsOpen(true);
       if (e.detail?.tab) setActiveTab(e.detail.tab);
-    });
-    return () => window.removeEventListener("booking_status_changed", loadBookingData);
+      loadBookingData();
+    };
+    window.addEventListener("open-consultation", handleRemoteControl);
+    window.addEventListener("booking_status_changed", loadBookingData);
+    return () => {
+      window.removeEventListener("open-consultation", handleRemoteControl);
+      window.removeEventListener("booking_status_changed", loadBookingData);
+    };
   }, []);
 
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTo({ top: chatContainerRef.current.scrollHeight, behavior: "smooth" });
     }
   }, [messages, isTyping, activeTab]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
-
-    const newMsg = {
-      id: Date.now(),
-      sender: "user",
-      text: inputValue,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
+    const newMsg = { id: Date.now(), sender: "user", text: inputValue, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
     setMessages(prev => [...prev, newMsg]);
     setInputValue("");
     setIsTyping(true);
-
     setTimeout(() => {
-      const doctorReply = {
-        id: Date.now() + 1,
-        sender: "doctor",
-        text: "Saya mengerti. Tarik napas perlahan, kamu sudah melakukan hal yang benar dengan berbagi hari ini.",
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
+      const doctorReply = { id: Date.now() + 1, sender: "doctor", text: "Saya mengerti perasaanmu. Mari kita bahas perlahan.", time: "Sekarang" };
       setMessages(prev => [...prev, doctorReply]);
       setIsTyping(false);
     }, 2000);
@@ -77,30 +73,34 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
     setIsConfirming(true);
     setTimeout(() => {
       setIsConfirming(false);
-      setIsSuccessConfirm(true); // Memunculkan pesan sukses
+      setIsSuccessConfirm(true); 
       setTimeout(() => {
         setIsSuccessConfirm(false);
-        localStorage.setItem("sarah_booked", "false"); 
-        localStorage.removeItem("booking_details");
-        setBookingData(null);
-        window.dispatchEvent(new Event("booking_status_changed"));
+        localStorage.setItem("sarah_confirmed", "true");
+        setIsConfirmed(true);
         setActiveTab("chat"); 
-      }, 2000);
-    }, 1500);
+      }, 2200);
+    }, 1200);
+  };
+
+  const handleClearBooking = () => {
+    localStorage.removeItem("sarah_booked");
+    localStorage.removeItem("booking_details");
+    localStorage.setItem("sarah_confirmed", "false");
+    setBookingData(null);
+    setIsConfirmed(false);
+    window.dispatchEvent(new Event("booking_status_changed"));
   };
 
   const finalCancel = () => {
     setShowCancelPrompt(false);
-    setIsCancelling(true); // Memunculkan pesan pembatalan selesai
+    setIsCancelling(true); 
     setTimeout(() => {
       setIsCancelling(false);
-      localStorage.removeItem("sarah_booked");
-      localStorage.removeItem("booking_details");
-      setBookingData(null);
-      window.dispatchEvent(new Event("booking_status_changed"));
+      handleClearBooking();
       setIsOpen(false);
       setTimeout(() => setActiveTab("booking"), 300);
-    }, 2000);
+    }, 1800);
   };
 
   return (
@@ -110,8 +110,9 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
           {!isOpen && (
             <motion.button
               onClick={() => setIsOpen(true)}
-              drag dragConstraints={dragBoundary} dragMomentum={false} 
-              className="relative w-14 h-14 bg-gradient-to-br from-[#076653]/80 to-[#E3EF26]/80 backdrop-blur-xl border border-white/20 rounded-[22px] shadow-xl flex items-center justify-center text-white cursor-grab active:cursor-grabbing"
+              whileHover={{ scale: 1.05, rotate: 3 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative w-14 h-14 bg-gradient-to-br from-[#076653]/80 to-[#E3EF26]/80 backdrop-blur-xl border border-white/20 rounded-[22px] shadow-xl flex items-center justify-center text-white"
             >
               <HeartPulse className="w-7 h-7 animate-pulse" />
             </motion.button>
@@ -122,136 +123,136 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 30 }}
-            animate={{ opacity: 1, scale: 1, y: 0, width: isExpanded ? "90vw" : "360px", height: isExpanded ? "80vh" : "540px" }}
-            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+            initial={{ opacity: 0, scale: 0.8, y: 100, rotateX: 10 }}
+            animate={{ 
+              opacity: 1, scale: 1, y: 0, rotateX: 0, 
+              width: isExpanded ? "90vw" : "360px", 
+              height: isExpanded ? "80vh" : "540px" 
+            }}
+            exit={{ opacity: 0, scale: 0.8, y: 100 }}
             className="pointer-events-auto absolute bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-2xl border border-white/30 dark:border-white/10 shadow-2xl rounded-[35px] overflow-hidden flex flex-col transform-gpu"
             style={{ bottom: isExpanded ? "5vh" : "110px", right: isExpanded ? "2.5vw" : "24px" }}
           >
-            <div className="p-4 sm:p-5 bg-white/40 dark:bg-black/40 border-b border-black/5 dark:border-white/10 flex items-center justify-between shrink-0 relative z-50">
+            <div className="p-4 sm:p-5 bg-white/40 dark:bg-black/40 border-b border-black/5 dark:border-white/10 flex items-center justify-between shrink-0 z-50">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#076653] flex items-center justify-center shadow-lg shadow-[#076653]/20"><User className="w-5 h-5 text-white" /></div>
-                <h3 className="text-xs sm:text-sm font-bold italic font-sans text-foreground">Konsultasi AMARTA</h3>
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-10 h-10 rounded-2xl bg-[#076653] flex items-center justify-center shadow-lg"><User className="w-5 h-5 text-white" /></motion.div>
+                <h3 className="text-sm font-bold italic font-sans text-foreground">Konsultasi AMARTA</h3>
               </div>
-              <div className="flex gap-2">
-                <button onClick={() => setIsExpanded(!isExpanded)} className="w-9 h-9 flex items-center justify-center bg-black/5 dark:bg-white/10 hover:bg-black/10 rounded-full transition-all hidden sm:flex">{isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}</button>
+              <div className="flex gap-1">
+                <button onClick={() => setIsExpanded(!isExpanded)} className="w-9 h-9 flex items-center justify-center bg-black/5 dark:bg-white/10 hover:bg-black/10 rounded-full transition-all">
+                  {isExpanded ? <Minimize2 className="w-4 h-4 text-foreground" /> : <Maximize2 className="w-4 h-4 text-foreground" />}
+                </button>
                 <button onClick={() => setIsOpen(false)} className="w-9 h-9 flex items-center justify-center bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-full transition-all"><X className="w-4 h-4" /></button>
               </div>
             </div>
 
             <div className="flex-1 overflow-hidden flex flex-col font-sans relative">
-              {activeTab === "booking" ? (
-                <div className="p-4 sm:p-6 overflow-y-auto space-y-4 h-full flex flex-col">
-                  <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest px-1">Konfirmasi Jadwal Sesi</p>
-                  
-                  {bookingData ? (
-                    <div className="relative p-4 sm:p-5 bg-white/50 dark:bg-black/30 rounded-[28px] border border-white/40 dark:border-white/10 space-y-4 shadow-sm overflow-hidden">
-                      
-                      <AnimatePresence>
-                        {showCancelPrompt && (
-                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-[60] bg-white/95 dark:bg-[#1C1C1E] flex flex-col items-center justify-center text-center p-6">
-                            <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mb-4"><AlertCircle className="w-6 h-6 text-red-500" /></div>
-                            <h4 className="text-xs font-bold mb-4">Apakah anda ingin membatalkan sesi konsultasi?</h4>
-                            <div className="flex gap-2 w-full">
-                              <button onClick={() => setShowCancelPrompt(false)} className="flex-1 py-3 rounded-2xl text-[9px] font-bold bg-black/5">KEMBALI</button>
-                              <button onClick={finalCancel} className="flex-1 py-3 rounded-2xl text-[9px] font-bold bg-red-500 text-white">BATALKAN</button>
-                            </div>
-                          </motion.div>
-                        )}
+              <AnimatePresence mode="wait">
+                {activeTab === "booking" ? (
+                  <motion.div key="booking-tab" initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} className="p-4 sm:p-6 overflow-y-auto h-full flex flex-col">
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest px-1">Konfirmasi Jadwal Sesi</p>
+                    
+                    {bookingData ? (
+                      <div className="relative p-4 sm:p-5 bg-white/50 dark:bg-black/30 rounded-[28px] border border-white/40 shadow-sm space-y-4">
+                        <AnimatePresence>
+                          {showCancelPrompt && (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[60] bg-white/95 dark:bg-[#1C1C1E] flex flex-col items-center justify-center text-center p-6 backdrop-blur-md">
+                              <AlertCircle className="w-10 h-10 text-red-500 mb-4" />
+                              <h4 className="text-xs font-bold mb-4">Batalkan sesi ini?</h4>
+                              <div className="flex gap-2 w-full"><button onClick={() => setShowCancelPrompt(false)} className="flex-1 py-3 rounded-2xl text-[9px] font-bold bg-black/5">KEMBALI</button><button onClick={finalCancel} className="flex-1 py-3 rounded-2xl text-[9px] font-bold bg-red-500 text-white">YA, BATALKAN</button></div>
+                            </motion.div>
+                          )}
+                          {isSuccessConfirm && (
+                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="absolute inset-0 z-[70] bg-white/95 dark:bg-[#1C1C1E] flex flex-col items-center justify-center text-center p-6">
+                              <motion.div initial={{ scale: 0 }} animate={{ scale: 1, rotate: [0, 10, 0] }} transition={{ type: "spring", damping: 10 }} className="relative"><CheckCircle2 className="w-16 h-16 text-[#076653] mb-4" /><Sparkles className="absolute -top-2 -right-2 text-[#E3EF26] w-6 h-6 animate-pulse" /></motion.div>
+                              <h4 className="text-sm font-bold text-foreground">Konfirmasi Berhasil!</h4>
+                              <p className="text-[9px] text-muted-foreground mt-2 uppercase tracking-widest">Mengalihkan ke Live chat...</p>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
 
-                        {isCancelling && (
-                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[70] bg-white/95 dark:bg-[#1C1C1E] flex flex-col items-center justify-center text-center p-6">
-                            <div className="w-12 h-12 bg-gray-500/10 rounded-full flex items-center justify-center mb-4"><AlertCircle className="w-6 h-6 text-gray-500" /></div>
-                            <h4 className="text-xs font-bold text-foreground italic">Pembatalan Selesai</h4>
-                          </motion.div>
-                        )}
-
-                        {isConfirming && (
-                           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-50 bg-white/90 dark:bg-black/90 backdrop-blur-md flex flex-col items-center justify-center">
-                              <MoreHorizontal className="w-8 h-8 text-[#076653] animate-pulse" />
-                           </motion.div>
-                        )}
-
-                        {isSuccessConfirm && (
-                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[70] bg-white/95 dark:bg-[#1C1C1E] flex flex-col items-center justify-center text-center p-6">
-                            <div className="w-16 h-16 bg-gradient-to-br from-[#076653] to-[#E3EF26] rounded-full flex items-center justify-center mb-4 shadow-lg shadow-[#076653]/30"><CheckCircle2 className="w-8 h-8 text-white" strokeWidth={2.5} /></div>
-                            <h4 className="text-xs font-bold text-foreground">Konfirmasi Berhasil!</h4>
-                            <p className="text-[9px] text-muted-foreground mt-2 uppercase tracking-widest leading-relaxed">Mengalihkan kamu ke Live chat</p>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      <div className="flex items-center gap-3">
-                        <img src="https://i.pravatar.cc/100?u=sarah" className="w-10 h-10 rounded-2xl border border-white/40 shadow-inner" alt="Doc" />
-                        <div className="min-w-0"><h4 className="text-xs sm:text-sm font-bold italic truncate text-foreground">dr. Sarah Chen</h4><p className="text-[9px] text-muted-foreground font-bold uppercase">Psikolog Klinis</p></div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-2 text-center text-[9px] font-bold italic">
-                        <div className="p-2 bg-white/40 dark:bg-white/5 rounded-xl border border-white/20 text-foreground"><p className="opacity-50 uppercase text-[7px] mb-0.5">Tanggal</p>{bookingData.dayName}, {bookingData.date} Mar</div>
-                        <div className="p-2 bg-white/40 dark:bg-white/5 rounded-xl border border-white/20 text-foreground"><p className="opacity-50 uppercase text-[7px] mb-0.5">Waktu</p>{bookingData.time} WIB</div>
-                      </div>
-
-                      <div className="bg-white/40 dark:bg-white/5 p-3 rounded-[20px] border border-white/20 space-y-2">
-                        <div className="flex justify-between items-center"><span className="text-[8px] font-bold opacity-60 uppercase text-foreground">Antrian</span><span className="text-xs font-bold text-[#076653] dark:text-[#E3EF26]">{bookingData.queueNumber}</span></div>
-                        <p className="text-[10px] italic text-foreground/80 line-clamp-2">"{bookingData.complaint}"</p>
-                      </div>
-
-                      <div className="flex gap-2 pt-1">
-                        <button onClick={() => setShowCancelPrompt(true)} className="flex-1 py-3 rounded-[14px] text-[9px] font-bold border border-red-500/20 text-red-500 hover:bg-red-500/10">BATALKAN</button>
-                        <button onClick={handleConfirmSession} className="flex-1 py-3 bg-[#076653] text-white dark:bg-white dark:text-black rounded-[14px] text-[9px] font-bold shadow-md">KONFIRMASI</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-                      <div className="w-14 h-14 bg-muted/20 rounded-full flex items-center justify-center mb-4 border border-dashed border-muted-foreground/30"><Calendar className="w-6 h-6 text-muted-foreground/30" /></div>
-                      <p className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-widest">Tidak Ada Jadwal Aktif</p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex-1 flex flex-col overflow-hidden h-full">
-                  <div ref={chatContainerRef} className="flex-1 overflow-y-auto px-4 pt-4 space-y-4 scrollbar-hide pb-4">
-                    {messages.map((msg) => (
-                      <motion.div key={msg.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex flex-col w-full ${msg.sender === "user" ? "items-end" : "items-start"}`}>
-                        <div className={`max-w-[85%] p-3 rounded-[20px] shadow-sm backdrop-blur-md ${msg.sender === "user" ? "bg-gradient-to-br from-[#076653] to-[#0C342C] text-white rounded-br-none" : "bg-white/60 dark:bg-white/10 border border-white/30 rounded-bl-none text-foreground"}`}>
-                          <p className="leading-relaxed italic text-[11px] font-medium">{msg.text}</p>
+                        <div className="flex items-center gap-3">
+                          <img src="https://i.pravatar.cc/100?u=sarah" className="w-10 h-10 rounded-2xl border border-white/40" alt="Doctor" />
+                          <div className="min-w-0"><h4 className="text-xs sm:text-sm font-bold italic truncate text-foreground">dr. Sarah Chen</h4><p className="text-[9px] text-muted-foreground font-bold uppercase">Psikolog Klinis</p></div>
                         </div>
-                        <p className="text-[7px] font-bold uppercase text-muted-foreground mt-1.5 tracking-widest px-1">{msg.time}</p>
-                      </motion.div>
-                    ))}
-                    {isTyping && (
-                      <div className="flex items-center gap-1.5 bg-white/40 dark:bg-white/5 p-3 rounded-2xl rounded-bl-none border border-white/20 w-fit">
-                        <MoreHorizontal className="w-4 h-4 text-[#076653] animate-pulse" />
-                      </div>
-                    )}
-                  </div>
+                        
+                        <div className="grid grid-cols-2 gap-2 text-center text-[9px] font-bold">
+                          <div className="p-2 bg-white/40 dark:bg-white/5 rounded-xl border border-white/20"><p className="opacity-50 text-[7px] mb-0.5">TANGGAL</p>{bookingData.dayName}, {bookingData.date} Mar</div>
+                          <div className="p-2 bg-white/40 dark:bg-white/5 rounded-xl border border-white/20"><p className="opacity-50 text-[7px] mb-0.5">WAKTU</p>{bookingData.time} WIB</div>
+                        </div>
 
-                  <div className="p-3 bg-white/40 dark:bg-black/20 border-t border-white/20">
-                    <form onSubmit={handleSendMessage} className="flex items-center gap-2 bg-white/80 dark:bg-white/5 p-1.5 rounded-[22px] border border-white/40 shadow-inner">
-                      <button type="button" className="w-8 h-8 flex items-center justify-center text-muted-foreground"><Paperclip className="w-4 h-4" /></button>
-                      <input 
-                        type="text" 
-                        value={inputValue} 
-                        onChange={(e) => setInputValue(e.target.value)} 
-                        placeholder="Tulis balasan..." 
-                        className="flex-1 bg-transparent border-none px-2 text-[11px] focus:outline-none placeholder:text-muted-foreground/60 font-sans text-foreground" 
-                      />
-                      <button 
-                        type="submit" 
-                        disabled={!inputValue.trim()} 
-                        className="w-8 h-8 bg-[#076653] rounded-full flex items-center justify-center text-white active:scale-90 transition-transform disabled:opacity-50"
-                      >
-                        <Send className="w-3.5 h-3.5 ml-0.5" />
-                      </button>
-                    </form>
-                  </div>
-                </div>
-              )}
+                        <div className="bg-white/40 dark:bg-white/5 p-3 rounded-[20px] border border-white/20 space-y-2">
+                          <div className="flex justify-between items-center"><span className="text-[8px] font-bold opacity-60 uppercase text-foreground">No. Antrian</span><span className="text-xs font-bold text-[#076653]">{bookingData.queueNumber}</span></div>
+                          <p className="text-[10px] italic text-foreground/80 line-clamp-2">"{bookingData.complaint}"</p>
+                        </div>
+
+                        {/* STATUS SELESAI & TOMBOL HAPUS */}
+                        {isConfirmed ? (
+                          <div className="flex gap-2 pt-1">
+                            <div className="flex-1 py-3 bg-green-500/10 border border-green-500/20 text-[#076653] rounded-[14px] text-center flex items-center justify-center gap-2">
+                               <CheckCircle2 className="w-3.5 h-3.5" />
+                               <span className="text-[9px] font-bold uppercase tracking-widest">Sesi Selesai</span>
+                            </div>
+                            <button 
+                              onClick={handleClearBooking} 
+                              className="w-12 flex items-center justify-center bg-red-500/10 text-red-500 border border-red-500/20 rounded-[14px] hover:bg-red-500/20 transition-all"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-2 pt-1">
+                            <button onClick={() => setShowCancelPrompt(true)} className="flex-1 py-3 rounded-[14px] text-[9px] font-bold border border-red-500/20 text-red-500 hover:bg-red-500/10">BATALKAN</button>
+                            <motion.button whileTap={{ scale: 0.9 }} onClick={handleConfirmSession} className="flex-1 py-3 bg-[#076653] text-white rounded-[14px] text-[9px] font-bold shadow-md">KONFIRMASI</motion.button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex-1 flex flex-col items-center justify-center text-center opacity-50"><Calendar className="w-10 h-10 mb-2" /><p className="text-[10px] font-bold uppercase">Tidak Ada Jadwal</p></div>
+                    )}
+                  </motion.div>
+                ) : (
+                  <motion.div key="chat-tab" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }} className="flex-1 flex flex-col h-full overflow-hidden">
+                    {!isConfirmed ? (
+                      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-gray-50/50 dark:bg-black/10">
+                        <AlertCircle className="w-10 h-10 text-orange-500 mb-4" />
+                        <h4 className="text-sm font-bold mb-2">Live Chat Terkunci</h4>
+                        <p className="text-[9px] text-muted-foreground leading-relaxed">Selesaikan konfirmasi di tab <b>BOOKING</b> untuk mengaktifkan fitur chat.</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div ref={chatContainerRef} className="flex-1 overflow-y-auto px-4 pt-4 space-y-4 scrollbar-hide pb-4">
+                          {messages.map((msg) => (
+                            <motion.div key={msg.id} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className={`flex flex-col w-full ${msg.sender === "user" ? "items-end" : "items-start"}`}>
+                              <div className={`max-w-[85%] p-3 rounded-[20px] shadow-sm ${msg.sender === "user" ? "bg-[#076653] text-white rounded-br-none" : "bg-white/80 dark:bg-white/10 border border-white/30 rounded-bl-none text-foreground"}`}><p className="leading-relaxed italic text-[11px] font-medium">{msg.text}</p></div>
+                              <p className="text-[7px] font-bold uppercase text-muted-foreground mt-1.5 px-1">{msg.time}</p>
+                            </motion.div>
+                          ))}
+                          {isTyping && <div className="flex items-center gap-1.5 bg-white/40 p-3 rounded-2xl w-fit"><MoreHorizontal className="w-4 h-4 text-[#076653] animate-pulse" /></div>}
+                        </div>
+                        <div className="p-3 bg-white/40 dark:bg-black/20 border-t border-white/20">
+                          <form onSubmit={handleSendMessage} className="flex items-center gap-2 bg-white/80 dark:bg-white/5 p-1.5 rounded-[22px] border border-white/40 shadow-inner">
+                            <button type="button" className="p-2 text-muted-foreground"><Paperclip className="w-4 h-4" /></button>
+                            <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Tulis balasan..." className="flex-1 bg-transparent border-none px-1 text-[11px] focus:outline-none" />
+                            <motion.button whileTap={{ scale: 0.8 }} type="submit" disabled={!inputValue.trim()} className="w-8 h-8 bg-[#076653] rounded-full flex items-center justify-center text-white"><Send className="w-3.5 h-3.5" /></motion.button>
+                          </form>
+                        </div>
+                      </>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            <div className="p-2 sm:p-3 flex gap-2 bg-white/20 dark:bg-white/5 border-t border-white/20 shrink-0">
-              <button onClick={() => setActiveTab("booking")} className={`flex-1 py-2.5 rounded-[16px] text-[9px] font-bold transition-all ${activeTab === "booking" ? "bg-foreground text-background shadow-md" : "text-foreground hover:bg-black/5"}`}>BOOKING</button>
-              <button onClick={() => setActiveTab("chat")} className={`flex-1 py-2.5 rounded-[16px] text-[9px] font-bold transition-all ${activeTab === "chat" ? "bg-foreground text-background shadow-md" : "text-foreground hover:bg-black/5"}`}>LIVE CHAT</button>
+            <div className="p-2 sm:p-3 flex gap-2 bg-white/20 border-t border-white/20 shrink-0">
+              <button onClick={() => setActiveTab("booking")} className={`flex-1 py-2.5 rounded-[16px] text-[9px] font-bold transition-all relative ${activeTab === "booking" ? "bg-[#076653] text-white shadow-md" : "text-foreground hover:bg-black/5"}`}>
+                {activeTab === "booking" && <motion.div layoutId="tab-high" className="absolute inset-0 rounded-[16px] bg-[#076653] z-[-1]" />}
+                BOOKING
+              </button>
+              <button onClick={() => setActiveTab("chat")} className={`flex-1 py-2.5 rounded-[16px] text-[9px] font-bold transition-all relative ${activeTab === "chat" ? "bg-[#076653] text-white shadow-md" : "text-foreground hover:bg-black/5"}`}>
+                {activeTab === "chat" && <motion.div layoutId="tab-high" className="absolute inset-0 rounded-[16px] bg-[#076653] z-[-1]" />}
+                LIVE CHAT
+              </button>
             </div>
           </motion.div>
         )}
@@ -260,7 +261,6 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
   );
 };
 
-// ... Bagian sisa kode AppLayout (Navbar, Sidebar, dll) tetap sama seperti sebelumnya ...
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -297,7 +297,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
       <main className="absolute inset-0 w-full z-10 overflow-y-auto transform-gpu flex flex-col">{children}</main>
       <ConsultationWidget dragBoundary={screenRef} />
       
-      <div className="fixed bottom-5 left-0 right-0 z-50 px-4 flex justify-center items-center gap-3 sm:gap-6 pointer-events-none transform-gpu">
+      <div className="fixed bottom-5 left-0 right-0 z-50 px-4 flex justify-center items-center gap-5 sm:gap-8 pointer-events-none transform-gpu">
         <nav className="relative bg-white/40 dark:bg-[#1c1c1e]/40 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-[32px] px-3 py-2 flex items-center gap-2 shadow-[0_8px_32px_rgba(0,0,0,0.1)] pointer-events-auto transition-all duration-300">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
@@ -320,8 +320,8 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
             <motion.div initial={{ x: "100%", opacity: 0.8 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "100%", opacity: 0.8 }} transition={{ type: "spring", damping: 30, stiffness: 300, mass: 0.8 }} className="fixed right-0 top-0 bottom-0 w-[82vw] sm:w-80 bg-white/95 dark:bg-black/95 backdrop-blur-xl border-l border-white/20 z-[110] p-6 flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.1)]">
               <div className="flex justify-between items-center mb-10"><div className="flex items-center gap-2"><div className="w-7 h-7 bg-[#076653] rounded-lg flex items-center justify-center text-white font-bold text-xs italic shadow-lg">A</div><h2 className="font-bold text-base italic tracking-tight font-sans">Menu AMARTA</h2></div><button onClick={() => setIsSidebarOpen(false)} className="p-2 bg-black/5 dark:bg-white/10 hover:bg-black/10 rounded-full transition-all"><X className="w-5 h-5" /></button></div>
               <div className="space-y-4 flex-1">
-                <button onClick={toggleTheme} className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-[20px] border border-gray-100 dark:border-white/10 shadow-sm hover:bg-gray-100 transition-colors"><div className="flex items-center gap-3">{isDark ? <Moon className="w-5 h-5 text-blue-400" /> : <Sun className="w-5 h-5 text-yellow-500" />}<span className="font-bold text-xs">{isDark ? "Mode Gelap" : "Mode Terang"}</span></div><div className={`w-9 h-5 rounded-full relative transition-colors ${isDark ? "bg-[#076653]" : "bg-gray-300"}`}><motion.div animate={{ x: isDark ? 18 : 2 }} className="absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm" /></div></button>
-                <div className="pt-4 space-y-2"><button onClick={() => { navigate("/resilience"); setIsSidebarOpen(false); }} className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-white/5 rounded-[20px] transition-all group"><ShieldCheck className="w-5 h-5 text-[#076653] group-hover:scale-110 transition-transform" /><span className="font-bold text-xs">Skor Ketahanan</span></button><button onClick={handleLogout} className="w-full flex items-center gap-3 p-4 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-[20px] text-red-500 transition-all group"><LogOut className="w-5 h-5 group-hover:translate-x-1 transition-transform" /><span className="font-bold text-xs">Keluar Aplikasi</span></button></div>
+                <button onClick={toggleTheme} className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-[20px] border border-gray-100 shadow-sm hover:bg-gray-100 transition-colors"><div className="flex items-center gap-3">{isDark ? <Moon className="w-5 h-5 text-blue-400" /> : <Sun className="w-5 h-5 text-yellow-500" />}<span className="font-bold text-xs">{isDark ? "Mode Gelap" : "Mode Terang"}</span></div><div className={`w-9 h-5 rounded-full relative transition-colors ${isDark ? "bg-[#076653]" : "bg-gray-300"}`}><motion.div animate={{ x: isDark ? 18 : 2 }} className="absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm" /></div></button>
+                <div className="pt-4 space-y-2"><button onClick={() => { navigate("/resilience"); setIsSidebarOpen(false); }} className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 rounded-[20px] transition-all group"><ShieldCheck className="w-5 h-5 text-[#076653] group-hover:scale-110 transition-transform" /><span className="font-bold text-xs">Skor Ketahanan</span></button><button onClick={handleLogout} className="w-full flex items-center gap-3 p-4 hover:bg-red-50 rounded-[20px] text-red-500 transition-all group"><LogOut className="w-5 h-5 group-hover:translate-x-1 transition-transform" /><span className="font-bold text-xs">Keluar Aplikasi</span></button></div>
               </div>
             </motion.div>
           </>
