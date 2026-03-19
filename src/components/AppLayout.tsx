@@ -85,7 +85,8 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[9999]">
-      <div className="absolute bottom-32 right-6 pointer-events-auto">
+      {/* Posisi widget dinaikkan sedikit agar tidak bertabrakan dengan dock navigasi yang baru */}
+      <div className="absolute bottom-36 right-6 pointer-events-auto">
         <AnimatePresence>
           {!isOpen && (
             <motion.button
@@ -286,38 +287,44 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   ];
 
   return (
+    // Mempertahankan struktur dasar, tetapi menghapus padding-bottom statis yang mengganggu ChatPage
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300 font-sans flex flex-col relative overflow-hidden" ref={screenRef}>
-      <main className="pt-20 pb-36 px-4 sm:px-6 max-w-2xl mx-auto w-full flex-1 z-10 overflow-y-auto transform-gpu">
+      
+      {/* Container ini sekarang bersifat absolute dan memenuhi layar (inset-0). 
+          Padding diatur oleh komponen individual (seperti ChatPage), bukan AppLayout */}
+      <main className="absolute inset-0 w-full z-10 overflow-y-auto transform-gpu flex flex-col">
         {children}
       </main>
 
+      {/* Widget Konsultasi (Tombol Jantung) */}
       <ConsultationWidget dragBoundary={screenRef} />
 
-      <div className="fixed bottom-8 left-0 right-0 z-50 px-4 flex justify-center pointer-events-none transform-gpu will-change-transform">
-        <nav className="bg-white/20 dark:bg-black/40 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-[35px] p-2 flex items-center gap-1 shadow-xl pointer-events-auto transition-colors duration-300 max-w-full overflow-x-auto scrollbar-hide">
+      {/* Dock Navigasi Bawah - Menggunakan z-50 agar selalu di atas */}
+      <div className="fixed bottom-6 left-0 right-0 z-50 px-4 flex justify-center pointer-events-none transform-gpu will-change-transform">
+        <nav className="bg-white/70 dark:bg-black/70 backdrop-blur-2xl border border-white/40 dark:border-white/10 rounded-[36px] p-2 flex items-center gap-1 shadow-2xl pointer-events-auto transition-colors duration-300 max-w-full overflow-x-auto scrollbar-hide">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
               <button
                 key={item.id}
                 onClick={() => navigate(item.path)}
-                className={`relative px-4 sm:px-5 py-3 rounded-[28px] flex items-center gap-2 transition-colors duration-300 shrink-0 ${isActive ? "text-white" : "text-foreground/70 dark:text-white/60 hover:text-foreground"}`}
+                className={`relative px-4 sm:px-5 py-3.5 rounded-[28px] flex items-center gap-2 transition-colors duration-300 shrink-0 ${isActive ? "text-white" : "text-foreground/70 dark:text-white/60 hover:text-foreground"}`}
               >
                 {isActive && (
-                  <motion.div layoutId="navPill" className="absolute inset-0 bg-gradient-to-r from-green-600 to-[#cc5833] rounded-[28px] z-0" transition={{ type: "spring", stiffness: 400, damping: 35 }} />
+                  <motion.div layoutId="navPill" className="absolute inset-0 bg-gradient-to-r from-green-600 to-[#cc5833] rounded-[28px] z-0 shadow-md shadow-green-900/20" transition={{ type: "spring", stiffness: 400, damping: 35 }} />
                 )}
-                <item.icon className={`w-4 h-4 sm:w-5 sm:h-5 z-10 ${isActive ? "scale-110 transition-transform" : ""}`} />
+                <item.icon className={`w-5 h-5 z-10 ${isActive ? "scale-110 transition-transform" : ""}`} />
                 {isActive && (
-                  <motion.span initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2 }} className="text-[10px] sm:text-[11px] font-bold z-10 whitespace-nowrap">
+                  <motion.span initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2 }} className="text-[11px] font-bold z-10 whitespace-nowrap">
                     {item.label}
                   </motion.span>
                 )}
               </button>
             );
           })}
-          <div className="w-[1px] h-6 bg-foreground/20 dark:bg-white/20 mx-1 shrink-0" />
-          <button onClick={() => setIsSidebarOpen(true)} className="p-2 sm:p-3 text-foreground/70 dark:text-white/60 rounded-full transition-colors hover:bg-white/20 shrink-0">
-            <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className="w-[1px] h-6 bg-foreground/20 dark:bg-white/20 mx-1.5 shrink-0" />
+          <button onClick={() => setIsSidebarOpen(true)} className="p-3 text-foreground/70 dark:text-white/60 rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/10 shrink-0">
+            <Menu className="w-5 h-5" />
           </button>
         </nav>
       </div>
@@ -340,7 +347,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
               </div>
 
               <div className="space-y-3 sm:space-y-4 flex-1">
-                <button onClick={toggleTheme} className="w-full flex items-center justify-between p-3 sm:p-4 bg-white/40 dark:bg-white/10 hover:bg-white/50 rounded-[18px] sm:rounded-[20px] transition-colors border border-white/20">
+                <button onClick={toggleTheme} className="w-full flex items-center justify-between p-3 sm:p-4 bg-white/40 dark:bg-white/10 hover:bg-white/50 rounded-[18px] sm:rounded-[20px] transition-colors border border-white/20 shadow-sm">
                   <div className="flex items-center gap-3">
                     {isDark ? <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" /> : <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />}
                     <span className="font-bold text-xs sm:text-sm tracking-tight">{isDark ? "Mode Gelap" : "Mode Terang"}</span>
