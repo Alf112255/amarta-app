@@ -68,7 +68,7 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
             <motion.button
               onClick={() => setIsOpen(true)}
               drag dragConstraints={dragBoundary} dragMomentum={false} 
-              className="relative w-14 h-14 bg-gradient-to-br from-[#076653] to-[#E3EF26] backdrop-blur-xl border border-white/20 rounded-[22px] shadow-xl flex items-center justify-center text-white cursor-grab active:cursor-grabbing"
+              className="relative w-14 h-14 bg-gradient-to-br from-[#076653]/60 to-[#E3EF26]/60 backdrop-blur-xl border border-white/20 rounded-[22px] shadow-xl flex items-center justify-center text-white cursor-grab active:cursor-grabbing"
             >
               <HeartPulse className="w-7 h-7 animate-pulse" />
             </motion.button>
@@ -88,7 +88,7 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
               height: isExpanded ? "80vh" : "540px" 
             }}
             exit={{ opacity: 0, scale: 0.9, y: 30 }}
-            className="pointer-events-auto absolute bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-2xl border border-white/30 dark:border-white/10 shadow-2xl rounded-[35px] overflow-hidden flex flex-col transform-gpu"
+            className="pointer-events-auto absolute bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-2xl border border-white/30 dark:border-white/10 shadow-2xl rounded-[35px] overflow-hidden flex flex-col transform-gpu"
             style={{ 
               bottom: isExpanded ? "5vh" : "110px", 
               right: isExpanded ? "2.5vw" : "24px" 
@@ -116,10 +116,10 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
                         {showCancelPrompt && (
                           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-[60] bg-white/95 dark:bg-[#1C1C1E] flex flex-col items-center justify-center text-center p-6">
                             <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mb-4"><AlertCircle className="w-6 h-6 text-red-500" /></div>
-                            <h4 className="text-xs font-bold mb-4 text-foreground">Apakah anda ingin membatalkan sesi konsultasi?</h4>
+                            <h4 className="text-xs font-bold mb-4">Apakah anda ingin membatalkan sesi konsultasi?</h4>
                             <div className="flex gap-2 w-full">
-                              <button onClick={() => setShowCancelPrompt(false)} className="flex-1 py-3 rounded-2xl text-[9px] font-bold bg-black/5 text-foreground">KEMBALI</button>
-                              <button onClick={finalCancel} className="flex-1 py-3 rounded-2xl text-[9px] font-bold bg-red-500 text-white shadow-lg shadow-red-500/20">BATALKAN</button>
+                              <button onClick={() => setShowCancelPrompt(false)} className="flex-1 py-3 rounded-2xl text-[9px] font-bold bg-black/5">KEMBALI</button>
+                              <button onClick={finalCancel} className="flex-1 py-3 rounded-2xl text-[9px] font-bold bg-red-500 text-white">BATALKAN</button>
                             </div>
                           </motion.div>
                         )}
@@ -167,8 +167,8 @@ const ConsultationWidget = ({ dragBoundary }: { dragBoundary: React.RefObject<El
             </div>
 
             <div className="p-2 sm:p-3 flex gap-2 bg-white/20 dark:bg-white/5 border-t border-white/20 shrink-0">
-              <button onClick={() => setActiveTab("booking")} className={`flex-1 py-2.5 rounded-[16px] text-[9px] font-bold transition-all ${activeTab === "booking" ? "bg-foreground text-background shadow-md" : "text-foreground hover:bg-black/5"}`}>BOOKING</button>
-              <button onClick={() => setActiveTab("chat")} className={`flex-1 py-2.5 rounded-[16px] text-[9px] font-bold transition-all ${activeTab === "chat" ? "bg-foreground text-background shadow-md" : "text-foreground hover:bg-black/5"}`}>LIVE CHAT</button>
+              <button onClick={() => setActiveTab("booking")} className={`flex-1 py-2.5 rounded-[16px] text-[9px] font-bold transition-all ${activeTab === "booking" ? "bg-[#076653] text-white shadow-md" : "text-foreground hover:bg-black/5"}`}>BOOKING</button>
+              <button onClick={() => setActiveTab("chat")} className={`flex-1 py-2.5 rounded-[16px] text-[9px] font-bold transition-all ${activeTab === "chat" ? "bg-[#076653] text-white shadow-md" : "text-foreground hover:bg-black/5"}`}>LIVE CHAT</button>
             </div>
           </motion.div>
         )}
@@ -214,8 +214,9 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
       
       <ConsultationWidget dragBoundary={screenRef} />
       
+      {/* BAR NAVIGASI DENGAN TRANSPARANSI TINGGI */}
       <div className="fixed bottom-5 left-0 right-0 z-50 px-4 flex justify-center items-center gap-3 sm:gap-6 pointer-events-none transform-gpu">
-        <nav className="relative bg-white/70 dark:bg-[#1c1c1e]/80 backdrop-blur-3xl border border-white/40 dark:border-white/10 rounded-[32px] px-3 py-2 flex items-center gap-2 shadow-[0_8px_32px_rgba(0,0,0,0.15)] pointer-events-auto transition-all duration-300">
+        <nav className="relative bg-white/40 dark:bg-[#1c1c1e]/40 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-[32px] px-3 py-2 flex items-center gap-2 shadow-[0_8px_32px_rgba(0,0,0,0.1)] pointer-events-auto transition-all duration-300">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
@@ -223,7 +224,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
                 key={item.id}
                 onClick={() => navigate(item.path)}
                 className={`relative flex flex-col items-center justify-center gap-1 w-[68px] sm:w-[80px] py-2 rounded-[20px] transition-colors duration-300 ${
-                  isActive ? "text-white dark:text-black" : "text-gray-500 dark:text-gray-400"
+                  isActive ? "text-white dark:text-black" : "text-gray-600 dark:text-gray-400"
                 }`}
               >
                 {isActive && (
@@ -244,7 +245,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
 
         <button 
           onClick={() => setIsSidebarOpen(true)} 
-          className="w-[56px] h-[56px] shrink-0 rounded-full bg-white/70 dark:bg-[#1c1c1e]/80 backdrop-blur-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.15)] flex items-center justify-center text-gray-700 dark:text-gray-300 pointer-events-auto transition-transform active:scale-90"
+          className="w-[56px] h-[56px] shrink-0 rounded-full bg-white/40 dark:bg-[#1c1c1e]/40 backdrop-blur-2xl border border-white/30 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.1)] flex items-center justify-center text-gray-700 dark:text-gray-300 pointer-events-auto transition-transform active:scale-90"
         >
           <Menu className="w-5 h-5" strokeWidth={2.5} />
         </button>
@@ -253,12 +254,65 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
       <AnimatePresence>
         {isSidebarOpen && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsSidebarOpen(false)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]" />
-            <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} className="fixed right-0 top-0 bottom-0 w-[85vw] sm:w-80 bg-white/95 dark:bg-black/95 backdrop-blur-xl border-l border-white/20 z-[110] p-5 flex flex-col">
-              <div className="flex justify-between items-center mb-10"><div className="flex items-center gap-2"><div className="w-7 h-7 bg-[#076653] rounded-lg flex items-center justify-center text-white font-bold text-xs italic">A</div><h2 className="font-bold text-base italic tracking-tight font-sans">Menu AMARTA</h2></div><button onClick={() => setIsSidebarOpen(false)} className="p-2 hover:bg-black/5 rounded-full"><X className="w-5 h-5" /></button></div>
-              <div className="space-y-3 flex-1">
-                <button onClick={toggleTheme} className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-white/5 rounded-[18px] border border-gray-200 shadow-sm"><div className="flex items-center gap-3">{isDark ? <Moon className="w-4 h-4 text-blue-400" /> : <Sun className="w-4 h-4 text-yellow-500" />}<span className="font-bold text-xs">{isDark ? "Mode Gelap" : "Mode Terang"}</span></div><div className={`w-9 h-5 rounded-full relative transition-colors ${isDark ? "bg-[#076653]" : "bg-gray-300"}`}><motion.div animate={{ x: isDark ? 16 : 2 }} className="absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm" /></div></button>
-                <div className="pt-3 space-y-2"><button onClick={() => { navigate("/resilience"); setIsSidebarOpen(false); }} className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-[18px] transition-colors"><ShieldCheck className="w-4 h-4 text-[#076653]" /><span className="font-bold text-xs">Skor Ketahanan</span></button><button onClick={handleLogout} className="w-full flex items-center gap-3 p-3 hover:bg-red-50 rounded-[18px] text-red-500 transition-colors"><LogOut className="w-4 h-4" /><span className="font-bold text-xs">Keluar Aplikasi</span></button></div>
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setIsSidebarOpen(false)} 
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-[100]" 
+            />
+            
+            <motion.div 
+              initial={{ x: "100%", opacity: 0.8 }} 
+              animate={{ x: 0, opacity: 1 }} 
+              exit={{ x: "100%", opacity: 0.8 }} 
+              transition={{ type: "spring", damping: 30, stiffness: 300, mass: 0.8 }}
+              className="fixed right-0 top-0 bottom-0 w-[82vw] sm:w-80 bg-white/95 dark:bg-black/95 backdrop-blur-xl border-l border-white/20 z-[110] p-6 flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.1)]"
+            >
+              <div className="flex justify-between items-center mb-10">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 bg-[#076653] rounded-lg flex items-center justify-center text-white font-bold text-xs italic shadow-lg">A</div>
+                  <h2 className="font-bold text-base italic tracking-tight font-sans">Menu AMARTA</h2>
+                </div>
+                <button 
+                  onClick={() => setIsSidebarOpen(false)} 
+                  className="p-2 bg-black/5 dark:bg-white/10 hover:bg-black/10 rounded-full transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-4 flex-1">
+                <button 
+                  onClick={toggleTheme} 
+                  className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-[20px] border border-gray-100 dark:border-white/10 shadow-sm hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    {isDark ? <Moon className="w-5 h-5 text-blue-400" /> : <Sun className="w-5 h-5 text-yellow-500" />}
+                    <span className="font-bold text-xs">{isDark ? "Mode Gelap" : "Mode Terang"}</span>
+                  </div>
+                  <div className={`w-9 h-5 rounded-full relative transition-colors ${isDark ? "bg-[#076653]" : "bg-gray-300"}`}>
+                    <motion.div animate={{ x: isDark ? 18 : 2 }} className="absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm" />
+                  </div>
+                </button>
+                
+                <div className="pt-4 space-y-2">
+                  <button 
+                    onClick={() => { navigate("/resilience"); setIsSidebarOpen(false); }} 
+                    className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-white/5 rounded-[20px] transition-all group"
+                  >
+                    <ShieldCheck className="w-5 h-5 text-[#076653] group-hover:scale-110 transition-transform" />
+                    <span className="font-bold text-xs">Skor Ketahanan</span>
+                  </button>
+                  <button 
+                    onClick={handleLogout} 
+                    className="w-full flex items-center gap-3 p-4 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-[20px] text-red-500 transition-all group"
+                  >
+                    <LogOut className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    <span className="font-bold text-xs">Keluar Aplikasi</span>
+                  </button>
+                </div>
               </div>
             </motion.div>
           </>
