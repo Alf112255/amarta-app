@@ -107,7 +107,7 @@ const MedicalFocusPage = () => {
           <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
             
             <div className="relative flex items-center justify-center shrink-0">
-              <svg className="w-48 h-48 sm:w-64 sm:h-64 transform -rotate-90 drop-shadow-[0_0_20px_rgba(227,239,38,0.2)]">
+              <svg className="w-30 h-48 sm:w-27 sm:h-80 transform -rotate-90 drop-shadow-[0_0_20px_rgba(227,239,38,0.2)]">
                 <circle cx="50%" cy="50%" r="100" fill="transparent" stroke="currentColor" strokeWidth="6" className="text-white/5" />
                 <motion.circle 
                   cx="50%" cy="50%" r={100} fill="transparent" stroke="#E3EF26" strokeWidth={10} 
