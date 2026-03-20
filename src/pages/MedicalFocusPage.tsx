@@ -80,7 +80,7 @@ const MedicalFocusPage = () => {
   return (
     <AppLayout>
       {/* pt-28 memastikan header tidak memotong konten di mobile */}
-      <div className="max-w-6xl mx-auto w-full flex flex-col min-h-screen pt-28 pb-44 px-6 sm:px-12 overflow-x-hidden">
+      <div className="max-w-6xl mx-auto w-full flex flex-col min-h-screen pt-28 pb-44 px-6 sm:px-28 overflow-x-hidden">
         
         <div className="flex items-center gap-5 mb-10 relative z-20">
           <button 
