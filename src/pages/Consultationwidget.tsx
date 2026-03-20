@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { 
   X, Maximize2, Minimize2, Calendar, 
   User, HeartPulse, Send, MoreHorizontal, 
@@ -20,7 +20,13 @@ const ConsultationWidget = () => {
   const [messages, setMessages] = useState([
     { id: 1, sender: "doctor", text: "Halo Alifi, dr. Sarah di sini. Ada yang bisa saya bantu terkait hasil analisis suaramu hari ini?", time: "Baru saja" }
   ]);
+  
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const constraintsRef = useRef(null);
+
+  // LOGIKA DRAG & SNAP
+  // Menggunakan state untuk mengatur posisi horizontal agar bisa snap ke pinggir
+  const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
 
   const loadBookingData = () => {
     const savedDetails = localStorage.getItem("booking_details");
@@ -89,16 +95,38 @@ const ConsultationWidget = () => {
     }, 1500);
   };
 
+  // Fungsi untuk menangani akhir drag (snapping logic)
+  const handleDragEnd = (event: any, info: any) => {
+    const screenWidth = window.innerWidth;
+    const threshold = screenWidth / 2;
+    const finalX = info.point.x;
+
+    // Jika dilepas di sisi kiri layar, snap ke kiri (margin 24px)
+    // Jika dilepas di sisi kanan layar, snap ke kanan (default fixed right-6)
+    if (finalX < threshold) {
+      setDragPosition({ x: -(screenWidth - 100), y: info.offset.y });
+    } else {
+      setDragPosition({ x: 0, y: info.offset.y });
+    }
+  };
+
   return (
-    <div className="fixed inset-0 pointer-events-none z-[9999]">
+    <div className="fixed inset-0 pointer-events-none z-[9999]" ref={constraintsRef}>
       <div className="absolute bottom-32 right-6 pointer-events-auto">
         <AnimatePresence>
           {!isOpen && (
             <motion.button
-              layoutId="widget-container"
+              drag
+              dragConstraints={constraintsRef}
+              dragElastic={0.1}
+              dragMomentum={false} // Membuatnya tidak terlalu licin
+              onDragEnd={handleDragEnd}
+              animate={{ x: dragPosition.x }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
               onClick={() => setIsOpen(true)}
               whileHover={{ scale: 1.1 }}
-              className="w-16 h-16 bg-gradient-to-br from-[#076653] to-[#E3EF26] backdrop-blur-xl border border-white/30 rounded-[24px] shadow-2xl flex items-center justify-center text-white"
+              whileTap={{ scale: 0.9 }}
+              className="w-16 h-16 bg-gradient-to-br from-[#076653] to-[#E3EF26] backdrop-blur-xl border border-white/30 rounded-[24px] shadow-2xl flex items-center justify-center text-white cursor-grab active:cursor-grabbing"
             >
               <HeartPulse className="w-8 h-8 animate-pulse" />
             </motion.button>
@@ -109,46 +137,43 @@ const ConsultationWidget = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            layoutId="widget-container"
             initial={{ opacity: 0, scale: 0.9, y: 50}}
             animate={{ 
-              opacity: 1, scale: 1, y: 50,
+              opacity: 1, scale: 1, y: 0,
               width: isExpanded ? "90vw" : "360px",
               height: isExpanded ? "80vh" : "540px",
             }}
             exit={{ opacity: 0, scale: 0.9, y: 50 }}
             className="pointer-events-auto absolute bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-[40px] border border-black/10 dark:border-white/10 shadow-2xl rounded-[45px] overflow-hidden flex flex-col"
-            style={{ bottom: isExpanded ? "10vh" : "130px", right: isExpanded ? "5vw" : "24px" }}
+            style={{ 
+                bottom: isExpanded ? "10vh" : "130px", 
+                right: dragPosition.x === 0 ? "24px" : "auto",
+                left: dragPosition.x === 0 ? "auto" : "24px"
+            }}
           >
-            {/* HEADER - DIPERBAIKI TOTAL */}
+            {/* HEADER */}
             <div className="p-5 bg-white/80 dark:bg-black/40 border-b border-black/5 dark:border-white/10 flex items-center justify-between shrink-0 relative z-50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#076653] flex items-center justify-center shadow-lg shadow-[#076653]/20">
+              <div className="flex items-center gap-3 text-foreground">
+                <div className="w-10 h-10 rounded-2xl bg-[#076653] flex items-center justify-center shadow-lg">
                   <User className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold italic tracking-tight text-foreground">Konsultasi AMARTA</h3>
+                  <h3 className="text-sm font-bold italic tracking-tight">Konsultasi AMARTA</h3>
                   <p className="text-[9px] font-bold uppercase tracking-widest text-[#076653] dark:text-[#E3EF26]">Layanan Aktif</p>
                 </div>
               </div>
               
               <div className="flex gap-2">
-                <button 
-                  onClick={() => setIsExpanded(!isExpanded)} 
-                  className="w-10 h-10 flex items-center justify-center bg-green-500/10 hover:bg-green-500/20 text-[#076653] rounded-2xl transition-all border border-green-500/10"
-                >
+                <button onClick={() => setIsExpanded(!isExpanded)} className="w-10 h-10 flex items-center justify-center bg-green-500/10 hover:bg-green-500/20 text-[#076653] rounded-2xl transition-all border border-green-500/10">
                   {isExpanded ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
                 </button>
-                <button 
-                  onClick={() => setIsOpen(false)} 
-                  className="w-10 h-10 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-600 rounded-2xl transition-all border border-red-500/10"
-                >
+                <button onClick={() => setIsOpen(false)} className="w-10 h-10 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-600 rounded-2xl transition-all border border-red-500/10">
                   <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
 
-            {/* Content Area */}
+            {/* CONTENT AREA */}
             <div className="flex-1 overflow-hidden flex flex-col font-sans relative">
               {activeTab === "booking" ? (
                 <div className="p-6 overflow-y-auto space-y-4 h-full">
@@ -157,7 +182,6 @@ const ConsultationWidget = () => {
                   {bookingData ? (
                     <div className="relative p-5 bg-white dark:bg-white/5 rounded-[32px] border border-black/5 dark:border-white/10 space-y-4 shadow-sm overflow-hidden min-h-[300px] flex flex-col justify-between">
                       
-                      {/* Konfirmasi Batal */}
                       <AnimatePresence>
                         {showCancelPrompt && (
                           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-[100] bg-white dark:bg-[#1C1C1E] flex flex-col items-center justify-center text-center p-6">
@@ -171,7 +195,6 @@ const ConsultationWidget = () => {
                         )}
                       </AnimatePresence>
 
-                      {/* Animasi Sukses */}
                       <AnimatePresence>
                         {isConfirming && (
                           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-50 bg-white/95 dark:bg-[#1C1C1E] flex flex-col items-center justify-center text-center px-4">
@@ -181,31 +204,31 @@ const ConsultationWidget = () => {
                         )}
                       </AnimatePresence>
 
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 text-foreground">
                         <img src="https://i.pravatar.cc/100?u=sarah" className="w-12 h-12 rounded-2xl border border-black/5 shadow-inner" alt="Doc" />
                         <div>
-                          <h4 className="text-sm font-bold italic tracking-tight text-foreground">dr. Sarah Chen</h4>
+                          <h4 className="text-sm font-bold italic tracking-tight">dr. Sarah Chen</h4>
                           <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Psikolog Klinis</p>
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-2 text-center text-[10px] font-bold italic">
+                      <div className="grid grid-cols-2 gap-2 text-center text-[10px] font-bold italic text-foreground">
                         <div className="p-3 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/5">
                           <p className="opacity-50 uppercase text-[7px] mb-1">Tanggal</p>
-                          <span className="text-foreground">{bookingData.dayName}, {bookingData.date} Mar</span>
+                          <span>{bookingData.dayName}, {bookingData.date} Mar</span>
                         </div>
                         <div className="p-3 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/5">
                           <p className="opacity-50 uppercase text-[7px] mb-1">Waktu</p>
-                          <span className="text-foreground">{bookingData.time} WIB</span>
+                          <span>{bookingData.time} WIB</span>
                         </div>
                       </div>
 
-                      <div className="bg-black/5 dark:bg-white/5 p-4 rounded-2xl border border-black/5">
+                      <div className="bg-black/5 dark:bg-white/5 p-4 rounded-2xl border border-black/5 text-foreground">
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-[8px] font-bold opacity-60 uppercase text-foreground">Antrian</span>
+                          <span className="text-[8px] font-bold opacity-60 uppercase">Antrian</span>
                           <span className="text-xs font-bold text-[#076653] dark:text-[#E3EF26]">{bookingData.queueNumber}</span>
                         </div>
-                        <p className="text-[10px] leading-relaxed italic opacity-80 text-foreground line-clamp-2">"{bookingData.complaint}"</p>
+                        <p className="text-[10px] leading-relaxed italic opacity-80 line-clamp-2">"{bookingData.complaint}"</p>
                       </div>
 
                       <div className="flex gap-2">
@@ -241,10 +264,10 @@ const ConsultationWidget = () => {
               )}
             </div>
 
-            {/* Footer Tabs */}
+            {/* FOOTER TABS */}
             <div className="p-3 flex gap-2 bg-black/5 dark:bg-white/5 border-t border-black/5 dark:border-white/10 shrink-0">
-              <button onClick={() => setActiveTab("booking")} className={`flex-1 py-3 rounded-2xl text-[10px] font-bold transition-all ${activeTab === "booking" ? "bg-[#076653] text-white shadow-lg shadow-[#076653]/20" : "text-foreground hover:bg-black/5"}`}>BOOKING</button>
-              <button onClick={() => setActiveTab("chat")} className={`flex-1 py-3 rounded-2xl text-[10px] font-bold transition-all ${activeTab === "chat" ? "bg-[#076653] text-white shadow-lg shadow-[#076653]/20" : "text-foreground hover:bg-black/5"}`}>LIVE CHAT</button>
+              <button onClick={() => setActiveTab("booking")} className={`flex-1 py-3 rounded-2xl text-[10px] font-bold transition-all ${activeTab === "booking" ? "bg-[#076653] text-white shadow-lg" : "text-foreground hover:bg-black/5"}`}>BOOKING</button>
+              <button onClick={() => setActiveTab("chat")} className={`flex-1 py-3 rounded-2xl text-[10px] font-bold transition-all ${activeTab === "chat" ? "bg-[#076653] text-white shadow-lg" : "text-foreground hover:bg-black/5"}`}>LIVE CHAT</button>
             </div>
           </motion.div>
         )}
