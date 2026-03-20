@@ -11,7 +11,7 @@ const recommendations = [
   {
     id: 1,
     title: "Pernapasan Kotak (Box Breathing)",
-    duration: 5, // dalam menit
+    duration: 5,
     seconds: 300,
     icon: Zap,
     img: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=80",
@@ -23,7 +23,7 @@ const recommendations = [
     duration: 3,
     seconds: 180,
     icon: Focus,
-    img: "https://images.unsplash.com/photo-1507400492013-162706c8c05e?auto=format&fit=crop&w=800&q=80",
+    img: "https://images.unsplash.com/photo-1518241353349-9b5650e2f5d7?auto=format&fit=crop&w=800&q=80",
     desc: "Sebutkan benda di sekitar Anda untuk membawa kesadaran penuh kembali ke masa kini dan meredakan panik."
   },
   {
@@ -32,7 +32,7 @@ const recommendations = [
     duration: 7,
     seconds: 420,
     icon: Brain,
-    img: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=80",
+    img: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=800&q=80",
     desc: "Relaksasi otot secara progresif dari ujung kaki hingga kepala untuk melepaskan beban stres fisik."
   }
 ];
@@ -44,9 +44,7 @@ const MedicalFocusPage = () => {
   const [totalTime, setTotalTime] = useState(300);
   const [activeTitle, setActiveTitle] = useState("Sesi Fokus");
   const [isFinished, setIsFinished] = useState(false);
-  const timerRef = useRef<HTMLDivElement>(null);
 
-  // Fungsi Suara Notifikasi Selesai
   const playCompletionSound = () => {
     const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
     audio.volume = 0.5;
@@ -54,11 +52,9 @@ const MedicalFocusPage = () => {
   };
 
   useEffect(() => {
-    let interval: any;
+    let interval: NodeJS.Timeout;
     if (isActive && secondsLeft > 0) {
-      interval = setInterval(() => {
-        setSecondsLeft((s) => s - 1);
-      }, 1000);
+      interval = setInterval(() => setSecondsLeft((s) => s - 1), 1000);
     } else if (secondsLeft === 0 && isActive) {
       setIsActive(false);
       setIsFinished(true);
@@ -74,11 +70,7 @@ const MedicalFocusPage = () => {
     setSecondsLeft(exercise.seconds);
     setActiveTitle(exercise.title);
     setIsFinished(false);
-    
-    // Smooth scroll ke atas agar pengguna fokus ke timer
     window.scrollTo({ top: 0, behavior: "smooth" });
-    
-    // Delay sedikit agar visual reset terlihat sebelum mulai
     setTimeout(() => setIsActive(true), 500);
   };
 
@@ -87,7 +79,8 @@ const MedicalFocusPage = () => {
 
   return (
     <AppLayout>
-      <div className="max-w-6xl mx-auto w-full flex flex-col min-h-screen pt-24 pb-44 px-6 sm:px-12 overflow-x-hidden">
+      {/* pt-28 memastikan header tidak memotong konten di mobile */}
+      <div className="max-w-6xl mx-auto w-full flex flex-col min-h-screen pt-28 pb-44 px-6 sm:px-12 overflow-x-hidden">
         
         <div className="flex items-center gap-5 mb-10 relative z-20">
           <button 
@@ -102,17 +95,18 @@ const MedicalFocusPage = () => {
           </div>
         </div>
 
-        {/* HERO TIMER SECTION */}
-        <div ref={timerRef} className="p-8 sm:p-12 bg-gradient-to-br from-[#076653] to-[#0C342C] rounded-[50px] text-white relative overflow-hidden shadow-2xl border border-white/10 mb-16">
+        {/* HERO TIMER SECTION - Diberikan padding internal lebih agar lingkaran tidak terpotong */}
+        <div className="p-10 sm:p-12 bg-gradient-to-br from-[#076653] to-[#0C342C] rounded-[50px] text-white relative overflow-hidden shadow-2xl border border-white/10 mb-16">
           <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
             
             <div className="relative flex items-center justify-center shrink-0">
-              <svg className="w-30 h-48 sm:w-27 sm:h-80 transform -rotate-90 drop-shadow-[0_0_20px_rgba(227,239,38,0.2)]">
-                <circle cx="50%" cy="50%" r="100" fill="transparent" stroke="currentColor" strokeWidth="6" className="text-white/5" />
+              {/* Ukuran SVG disesuaikan agar pas di container mobile */}
+              <svg className="w-52 h-52 sm:w-64 sm:h-64 transform -rotate-90 drop-shadow-[0_0_20px_rgba(227,239,38,0.2)]">
+                <circle cx="50%" cy="50%" r="90" fill="transparent" stroke="currentColor" strokeWidth="6" className="text-white/5" />
                 <motion.circle 
-                  cx="50%" cy="50%" r={100} fill="transparent" stroke="#E3EF26" strokeWidth={10} 
-                  strokeDasharray={2 * Math.PI * 100}
-                  animate={{ strokeDashoffset: (1 - percentage / 100) * (2 * Math.PI * 100) }}
+                  cx="50%" cy="50%" r="90" fill="transparent" stroke="#E3EF26" strokeWidth={10} 
+                  strokeDasharray={2 * Math.PI * 90}
+                  animate={{ strokeDashoffset: (1 - percentage / 100) * (2 * Math.PI * 90) }}
                   transition={{ duration: 1, ease: "linear" }}
                   strokeLinecap="round"
                 />
@@ -140,7 +134,7 @@ const MedicalFocusPage = () => {
                  <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-[#E3EF26] animate-pulse' : 'bg-white/30'}`} /> {isActive ? "Latihan Sedang Berjalan" : "Siap Memulai"}
               </div>
               <h2 className="text-3xl sm:text-5xl font-black mb-4 italic tracking-tight leading-none text-white">{activeTitle}</h2>
-              <p className="text-sm leading-relaxed opacity-70 italic mb-10 max-w-sm text-white">Ikuti instruksi visual dan pertahankan ritme tubuh Anda hingga sinyal bunyi terdengar.</p>
+              <p className="text-sm leading-relaxed opacity-70 italic mb-10 max-w-sm text-white text-balance">Ikuti instruksi visual dan pertahankan ritme tubuh Anda hingga sinyal bunyi terdengar.</p>
               
               <div className="flex gap-4">
                 <button onClick={() => setIsActive(!isActive)} className={`w-16 h-16 rounded-full flex items-center justify-center transition-all active:scale-95 ${isActive ? 'bg-orange-500 shadow-orange-500/20' : 'bg-[#E3EF26] text-black shadow-[#E3EF26]/20'} shadow-lg`}>
@@ -192,7 +186,7 @@ const MedicalFocusPage = () => {
         
         <div className="mt-24 mb-10 flex flex-col items-center gap-4 opacity-20 text-foreground relative z-10">
           <BarChart3 className="w-5 h-5" />
-          <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Resilience Center</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Resilience Center v2.5</p>
         </div>
 
       </div>
